@@ -44,6 +44,7 @@ class _SnakeGamePageState extends State<SnakeGamePage> {
   MoveDirection currentDirection = MoveDirection.right;
   bool isPlaying = false;
   int score = 0;
+  bool _twoHanded = false;
 
   // Themes
   int _currentThemeIndex = 0;
@@ -283,6 +284,21 @@ class _SnakeGamePageState extends State<SnakeGamePage> {
                           ),
                         ),
                         const Spacer(),
+                        // Dual-joystick toggle
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.black.withOpacity(0.35),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            onPressed: () => setState(() => _twoHanded = !_twoHanded),
+                            icon: Icon(_twoHanded ? Icons.pan_tool_alt : Icons.pan_tool_outlined),
+                            label: Text(_twoHanded ? 'Çift El: Açık' : 'Çift El: Kapalı'),
+                          ),
+                        ),
                         _ThemeSelectors(
                           themes: _themes,
                           selectedIndex: _currentThemeIndex,
@@ -309,7 +325,7 @@ class _SnakeGamePageState extends State<SnakeGamePage> {
                             Positioned(
                               left: food.x * cellSize,
                               top: food.y * cellSize,
-                              child: _FoodWidget(size: cellSize * 0.9, imageUrl: theme.foodUrl),
+                              child: _FoodWidget(size: cellSize * 0.9, theme: theme),
                             ),
                             ...snake.map((Point<int> p) {
                               final bool isHead = p == snake.first;
@@ -335,24 +351,29 @@ class _SnakeGamePageState extends State<SnakeGamePage> {
                 ],
               ),
               Positioned(
-                left: 24,
-                right: 24,
-                bottom: 24,
+                left: 16,
+                right: 16,
+                bottom: 20,
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: <Widget>[
-                    _Joystick(
-                      size: min(220, constraints.maxWidth * 0.55),
-                      onDirectionChanged: (MoveDirection? dir) {
-                        if (dir != null) _changeDirection(dir);
-                      },
-                      onTouchStart: (MoveDirection? initial) {
-                        _ensureStarted();
-                        if (initial != null) _changeDirection(initial);
-                        _step();
-                      },
-                    ),
-                    const SizedBox(width: 16),
+                    // Left joystick (only in two-handed mode)
+                    if (_twoHanded)
+                      _Joystick(
+                        size: min(200, constraints.maxWidth * 0.35),
+                        onDirectionChanged: (MoveDirection? dir) {
+                          if (dir != null) _changeDirection(dir);
+                        },
+                        onTouchStart: (MoveDirection? initial) {
+                          _ensureStarted();
+                          if (initial != null) _changeDirection(initial);
+                          _step();
+                        },
+                      )
+                    else
+                      const SizedBox(width: 1),
+                    // Stop button in the middle
                     ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.black.withOpacity(0.45),
@@ -363,6 +384,18 @@ class _SnakeGamePageState extends State<SnakeGamePage> {
                       onPressed: _stop,
                       icon: const Icon(Icons.stop_circle_outlined),
                       label: const Text('Stop'),
+                    ),
+                    // Right joystick (always visible)
+                    _Joystick(
+                      size: min(200, constraints.maxWidth * 0.35),
+                      onDirectionChanged: (MoveDirection? dir) {
+                        if (dir != null) _changeDirection(dir);
+                      },
+                      onTouchStart: (MoveDirection? initial) {
+                        _ensureStarted();
+                        if (initial != null) _changeDirection(initial);
+                        _step();
+                      },
                     ),
                   ],
                 ),
@@ -584,28 +617,98 @@ class _GameTheme {
   final String foodUrl;
 }
 
-class _FoodWidget extends StatelessWidget {
-  const _FoodWidget({required this.size, required this.imageUrl});
+class _FoodWidget extends StatefulWidget {
+  const _FoodWidget({required this.size, required this.theme});
 
   final double size;
-  final String imageUrl;
+  final _GameTheme theme;
+
+  @override
+  State<_FoodWidget> createState() => _FoodWidgetState();
+}
+
+class _FoodWidgetState extends State<_FoodWidget> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _spin;
+  late final Animation<double> _pulse;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 3))..repeat();
+    _spin = Tween<double>(begin: 0, end: 2 * pi).animate(CurvedAnimation(parent: _controller, curve: Curves.linear));
+    _pulse = Tween<double>(begin: 0.9, end: 1.1).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final double size = widget.size;
+    final String imageUrl = widget.theme.foodUrl;
     return SizedBox(
       width: size,
       height: size,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(size * 0.2),
-        child: Image.network(
-          imageUrl,
-          fit: BoxFit.cover,
-          errorBuilder: (BuildContext _, Object __, StackTrace? ___) {
-            return Container(
-              color: Colors.redAccent,
-            );
-          },
-        ),
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (BuildContext context, Widget? child) {
+          return Transform.rotate(
+            angle: _spin.value,
+            child: Transform.scale(
+              scale: _pulse.value,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: <BoxShadow>[
+                    BoxShadow(color: Colors.black.withOpacity(0.35), blurRadius: 10, offset: const Offset(0, 4)),
+                    BoxShadow(color: Colors.white.withOpacity(0.08), blurRadius: 20, spreadRadius: -8),
+                  ],
+                  gradient: RadialGradient(
+                    colors: <Color>[
+                      Colors.white.withOpacity(0.95),
+                      Colors.white.withOpacity(0.75),
+                    ],
+                  ),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(size * 0.08),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(size),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: <Widget>[
+                        Image.network(imageUrl, fit: BoxFit.cover, errorBuilder: (BuildContext _, Object __, StackTrace? ___) {
+                          return Container(color: Colors.redAccent);
+                        }),
+                        // Subtle highlight to simulate gloss
+                        Align(
+                          alignment: Alignment.topLeft,
+                          child: Container(
+                            width: size * 0.35,
+                            height: size * 0.35,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: RadialGradient(
+                                colors: <Color>[
+                                  Colors.white.withOpacity(0.45),
+                                  Colors.transparent,
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
