@@ -719,84 +719,71 @@ class _NokiaKeypad extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          // Direction cluster
-          Container(
-            width: dpadSize,
-            height: dpadSize,
-            decoration: glossy(0.30),
-            child: Stack(
-              children: <Widget>[
-                arrowBtn(Icons.keyboard_arrow_up, MoveDirection.up, align: Alignment.topCenter),
-                arrowBtn(Icons.keyboard_arrow_down, MoveDirection.down, align: Alignment.bottomCenter),
-                arrowBtn(Icons.keyboard_arrow_left, MoveDirection.left, align: Alignment.centerLeft),
-                arrowBtn(Icons.keyboard_arrow_right, MoveDirection.right, align: Alignment.centerRight),
-                // Center select circle for 3310 vibe
-                Align(
-                  alignment: Alignment.center,
-                  child: Container(
-                    width: dpadSize * 0.28,
-                    height: dpadSize * 0.28,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.black.withOpacity(0.28),
-                      boxShadow: <BoxShadow>[
-                        BoxShadow(color: Colors.black.withOpacity(0.35), blurRadius: 16, offset: const Offset(0, 6)),
-                      ],
-                      border: Border.all(color: Colors.white24, width: 2),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: pad),
-          // Soft keys (dummy UI for authenticity)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              Expanded(
-                child: Container(
-                  height: btnSize * 0.9,
-                  decoration: glossy(0.28),
-                  alignment: Alignment.center,
-                  child: const Text('Seç', style: TextStyle(color: Colors.white70)),
-                ),
-              ),
-              SizedBox(width: pad),
-              Expanded(
-                child: Container(
-                  height: btnSize * 0.9,
-                  decoration: glossy(0.28),
-                  alignment: Alignment.center,
-                  child: const Text('Geri', style: TextStyle(color: Colors.white70)),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: pad),
-          // Numeric pad row mock (purely decorative for nostalgia)
-          Wrap(
-            alignment: WrapAlignment.center,
-            spacing: pad,
-            runSpacing: pad,
-            children: List<Widget>.generate(9, (int i) {
-              return Container(
-                width: btnSize * 0.85,
-                height: btnSize * 0.85,
-                decoration: glossy(0.26),
-                alignment: Alignment.center,
-                child: Text('${i + 1}', style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
-              );
-            })
-              ..add(Container(
-                width: (btnSize * 0.85) * 3 + pad * 2,
-                height: btnSize * 0.85,
-                decoration: glossy(0.26),
-                alignment: Alignment.center,
-                child: const Text('0', style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
-              )),
-          ),
+          _KeyRow(labels: const <String>['1', '2', '3'], btnSize: btnSize, onTap: (String k) { if (k == '2') onDirection(MoveDirection.up); }),
+          SizedBox(height: pad * 0.7),
+          _KeyRow(labels: const <String>['4', '5', '6'], btnSize: btnSize, onTap: (String k) {
+            if (k == '4') onDirection(MoveDirection.left);
+            if (k == '6') onDirection(MoveDirection.right);
+          }),
+          SizedBox(height: pad * 0.7),
+          _KeyRow(labels: const <String>['7', '8', '9'], btnSize: btnSize, onTap: (String k) { if (k == '9') onDirection(MoveDirection.down); }),
+          SizedBox(height: pad * 0.7),
+          _KeyRow(labels: const <String>['*', '0', '#'], btnSize: btnSize, onTap: (String k) {}),
         ],
+      ),
+    );
+  }
+}
+
+class _KeyRow extends StatelessWidget {
+  const _KeyRow({required this.labels, required this.btnSize, required this.onTap});
+
+  final List<String> labels;
+  final double btnSize;
+  final void Function(String label) onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: labels
+          .map((String label) => Padding(
+                padding: EdgeInsets.symmetric(horizontal: btnSize * 0.12),
+                child: _PillKey(label: label, size: btnSize, onTap: () => onTap(label)),
+              ))
+          .toList(),
+    );
+  }
+}
+
+class _PillKey extends StatelessWidget {
+  const _PillKey({required this.label, required this.size, required this.onTap});
+
+  final String label;
+  final double size;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size * 0.95,
+      height: size * 0.8,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(size * 0.45),
+        onTap: onTap,
+        child: Ink(
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.26),
+            borderRadius: BorderRadius.circular(size * 0.45),
+            boxShadow: <BoxShadow>[
+              BoxShadow(color: Colors.black.withOpacity(0.35), blurRadius: 10, offset: const Offset(0, 6)),
+            ],
+            border: Border.all(color: Colors.white24, width: 2),
+          ),
+          child: Center(
+            child: Text(label, style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
+          ),
+        ),
       ),
     );
   }
