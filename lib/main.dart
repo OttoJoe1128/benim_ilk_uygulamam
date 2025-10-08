@@ -121,10 +121,17 @@ class _SnakeGamePageState extends State<SnakeGamePage> {
         break;
     }
 
-    final bool hitWall =
-        nextHead.x < 0 || nextHead.x >= numCols || nextHead.y < 0 || nextHead.y >= numRows;
+    // Wrap-around: move through walls and appear on the opposite side
+    int wrappedX = nextHead.x;
+    int wrappedY = nextHead.y;
+    if (wrappedX < 0) wrappedX = numCols - 1;
+    if (wrappedX >= numCols) wrappedX = 0;
+    if (wrappedY < 0) wrappedY = numRows - 1;
+    if (wrappedY >= numRows) wrappedY = 0;
+    nextHead = Point<int>(wrappedX, wrappedY);
+
     final bool hitSelf = snake.contains(nextHead);
-    if (hitWall || hitSelf) {
+    if (hitSelf) {
       _stop();
       _showGameOver();
       return;
@@ -191,87 +198,88 @@ class _SnakeGamePageState extends State<SnakeGamePage> {
           final double gridSize = min(constraints.maxWidth, constraints.maxHeight - 120);
           final double cellSize = gridSize / numCols;
 
-          return Column(
+          return Stack(
             children: <Widget>[
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: <Widget>[
-                    Row(
+              Column(
+                children: <Widget>[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: <Widget>[
-                        const Icon(Icons.star, color: Colors.amber),
-                        const SizedBox(width: 8),
-                        Text('Skor: $score', style: const TextStyle(fontSize: 18)),
-                      ],
-                    ),
-                    ElevatedButton.icon(
-                      onPressed: isPlaying ? _stop : _start,
-                      icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
-                      label: Text(isPlaying ? 'Duraklat' : 'Başlat'),
-                    ),
-                    ElevatedButton.icon(
-                      onPressed: _resetGame,
-                      icon: const Icon(Icons.restart_alt),
-                      label: const Text('Sıfırla'),
-                    ),
-                  ],
-                ),
-              ),
-              Center(
-                child: GestureDetector(
-                  onPanUpdate: _handleSwipe,
-                  child: Container(
-                    width: gridSize,
-                    height: gridSize,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
-                      border: Border.all(color: Colors.grey.shade400),
-                    ),
-                    child: Stack(
-                      children: <Widget>[
-                        // Food
-                        Positioned(
-                          left: food.x * cellSize,
-                          top: food.y * cellSize,
-                          child: _buildCell(cellSize, Colors.redAccent, rounded: true),
+                        Row(
+                          children: <Widget>[
+                            const Icon(Icons.star, color: Colors.amber),
+                            const SizedBox(width: 8),
+                            Text('Skor: $score', style: const TextStyle(fontSize: 18)),
+                          ],
                         ),
-                        // Snake
-                        ...snake.map((Point<int> p) {
-                          final bool isHead = p == snake.first;
-                          return Positioned(
-                            left: p.x * cellSize,
-                            top: p.y * cellSize,
-                            child: _buildCell(
-                              cellSize,
-                              isHead ? Colors.green.shade700 : Colors.green,
-                              rounded: isHead,
-                            ),
-                          );
-                        }),
-                        // Grid overlay (optional subtle lines)
-                        CustomPaint(
-                          size: Size(gridSize, gridSize),
-                          painter: _GridPainter(numRows: numRows, numCols: numCols),
+                        ElevatedButton.icon(
+                          onPressed: isPlaying ? _stop : _start,
+                          icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
+                          label: Text(isPlaying ? 'Duraklat' : 'Başlat'),
+                        ),
+                        ElevatedButton.icon(
+                          onPressed: _resetGame,
+                          icon: const Icon(Icons.restart_alt),
+                          label: const Text('Sıfırla'),
                         ),
                       ],
                     ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Wrap(
-                alignment: WrapAlignment.center,
-                spacing: 8,
-                runSpacing: 8,
-                children: <Widget>[
-                  _controlButton(Icons.keyboard_arrow_up, () => _changeDirection(MoveDirection.up)),
-                  _controlButton(Icons.keyboard_arrow_down, () => _changeDirection(MoveDirection.down)),
-                  _controlButton(Icons.keyboard_arrow_left, () => _changeDirection(MoveDirection.left)),
-                  _controlButton(Icons.keyboard_arrow_right, () => _changeDirection(MoveDirection.right)),
+                  Center(
+                    child: GestureDetector(
+                      onPanUpdate: _handleSwipe,
+                      child: Container(
+                        width: gridSize,
+                        height: gridSize,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade200,
+                          border: Border.all(color: Colors.grey.shade400),
+                        ),
+                        child: Stack(
+                          children: <Widget>[
+                            Positioned(
+                              left: food.x * cellSize,
+                              top: food.y * cellSize,
+                              child: _buildCell(cellSize, Colors.redAccent, rounded: true),
+                            ),
+                            ...snake.map((Point<int> p) {
+                              final bool isHead = p == snake.first;
+                              return Positioned(
+                                left: p.x * cellSize,
+                                top: p.y * cellSize,
+                                child: _buildCell(
+                                  cellSize,
+                                  isHead ? Colors.green.shade700 : Colors.green,
+                                  rounded: isHead,
+                                ),
+                              );
+                            }),
+                            CustomPaint(
+                              size: Size(gridSize, gridSize),
+                              painter: _GridPainter(numRows: numRows, numCols: numCols),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
-              const SizedBox(height: 12),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 24,
+                child: Center(
+                  child: _Joystick(
+                    size: min(220, constraints.maxWidth * 0.6),
+                    onDirectionChanged: (MoveDirection? dir) {
+                      if (dir != null) _changeDirection(dir);
+                    },
+                  ),
+                ),
+              ),
             ],
           );
         },
@@ -295,6 +303,130 @@ class _SnakeGamePageState extends State<SnakeGamePage> {
       style: ElevatedButton.styleFrom(minimumSize: const Size(48, 48)),
       onPressed: onPressed,
       child: Icon(icon),
+    );
+  }
+}
+
+class _Joystick extends StatefulWidget {
+  const _Joystick({required this.size, required this.onDirectionChanged});
+
+  final double size;
+  final void Function(MoveDirection? direction) onDirectionChanged;
+
+  @override
+  State<_Joystick> createState() => _JoystickState();
+}
+
+class _JoystickState extends State<_Joystick> {
+  late double _radius;
+  Offset _knob = Offset.zero; // relative to center
+
+  @override
+  void initState() {
+    super.initState();
+    _radius = widget.size / 2.2; // some padding inside base
+  }
+
+  void _updateKnob(Offset localPosition) {
+    final Offset center = Offset(widget.size / 2, widget.size / 2);
+    Offset delta = localPosition - center;
+    if (delta.distance > _radius) {
+      delta = Offset.fromDirection(delta.direction, _radius);
+    }
+    setState(() => _knob = delta);
+
+    // Deadzone to avoid jitter
+    if (delta.distance < _radius * 0.25) {
+      widget.onDirectionChanged(null);
+      return;
+    }
+
+    final double dx = delta.dx;
+    final double dy = delta.dy;
+    // Determine dominant axis for cardinal direction
+    if (dx.abs() > dy.abs()) {
+      widget.onDirectionChanged(dx > 0 ? MoveDirection.right : MoveDirection.left);
+    } else {
+      widget.onDirectionChanged(dy > 0 ? MoveDirection.down : MoveDirection.up);
+    }
+  }
+
+  void _resetKnob() {
+    setState(() => _knob = Offset.zero);
+    widget.onDirectionChanged(null);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final double baseSize = widget.size;
+    final double knobSize = baseSize * 0.35;
+
+    return IgnorePointer(
+      ignoring: false,
+      child: Opacity(
+        opacity: 0.9,
+        child: Container(
+          width: baseSize,
+          height: baseSize,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.black.withOpacity(0.25),
+            boxShadow: <BoxShadow>[
+              BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 18, spreadRadius: 2),
+            ],
+            border: Border.all(color: Colors.white24, width: 2),
+          ),
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onPanStart: (DragStartDetails d) => _updateKnob(d.localPosition),
+            onPanUpdate: (DragUpdateDetails d) => _updateKnob(d.localPosition),
+            onPanEnd: (_) => _resetKnob(),
+            onPanCancel: _resetKnob,
+            child: Stack(
+              children: <Widget>[
+                // Direction hints
+                Align(
+                  alignment: Alignment.topCenter,
+                  child: Icon(Icons.keyboard_arrow_up, color: Colors.white54, size: baseSize * 0.22),
+                ),
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Icon(Icons.keyboard_arrow_down, color: Colors.white54, size: baseSize * 0.22),
+                ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Icon(Icons.keyboard_arrow_left, color: Colors.white54, size: baseSize * 0.22),
+                ),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Icon(Icons.keyboard_arrow_right, color: Colors.white54, size: baseSize * 0.22),
+                ),
+                // Knob
+                Positioned(
+                  left: (baseSize - knobSize) / 2 + _knob.dx,
+                  top: (baseSize - knobSize) / 2 + _knob.dy,
+                  child: Container(
+                    width: knobSize,
+                    height: knobSize,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: <Color>[Colors.white.withOpacity(0.95), Colors.grey.shade300],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      boxShadow: <BoxShadow>[
+                        BoxShadow(color: Colors.black.withOpacity(0.35), blurRadius: 12, offset: const Offset(0, 6)),
+                      ],
+                      border: Border.all(color: Colors.white70, width: 2),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
