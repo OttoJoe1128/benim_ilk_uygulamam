@@ -392,9 +392,9 @@ class _SnakeGamePageState extends State<SnakeGamePage> {
                       )
                     else
                       Center(
-                        child: _DPad(
-                          size: min(240, constraints.maxWidth * 0.6),
-                          onPressed: (MoveDirection dir) {
+                        child: _NokiaKeypad(
+                          size: min(260, constraints.maxWidth * 0.7),
+                          onDirection: (MoveDirection dir) {
                             _changeDirection(dir);
                             _ensureStarted();
                             _step();
@@ -655,6 +655,147 @@ class _DPad extends StatelessWidget {
           Align(alignment: Alignment.bottomCenter, child: buildBtn(Icons.keyboard_arrow_down, MoveDirection.down)),
           Align(alignment: Alignment.centerLeft, child: buildBtn(Icons.keyboard_arrow_left, MoveDirection.left)),
           Align(alignment: Alignment.centerRight, child: buildBtn(Icons.keyboard_arrow_right, MoveDirection.right)),
+        ],
+      ),
+    );
+  }
+}
+
+class _NokiaKeypad extends StatelessWidget {
+  const _NokiaKeypad({required this.size, required this.onDirection});
+
+  final double size;
+  final void Function(MoveDirection direction) onDirection;
+
+  @override
+  Widget build(BuildContext context) {
+    final double pad = size * 0.06;
+    final double dpadSize = size * 0.6; // directional cluster like 3310
+    final double btnSize = dpadSize * 0.32;
+    final BorderRadius radius = BorderRadius.circular(16);
+
+    BoxDecoration glossy([double opacity = 0.35]) => BoxDecoration(
+          color: Colors.black.withOpacity(opacity),
+          borderRadius: radius,
+          boxShadow: <BoxShadow>[
+            BoxShadow(color: Colors.black.withOpacity(0.35), blurRadius: 16, offset: const Offset(0, 8)),
+          ],
+          border: Border.all(color: Colors.white24, width: 2),
+        );
+
+    Widget arrowBtn(IconData icon, MoveDirection dir, {Alignment? align}) {
+      return Align(
+        alignment: align ?? Alignment.center,
+        child: SizedBox(
+          width: btnSize,
+          height: btnSize,
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.black.withOpacity(0.35),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: radius),
+              shadowColor: Colors.black.withOpacity(0.35),
+              elevation: 8,
+              padding: EdgeInsets.zero,
+            ),
+            onPressed: () => onDirection(dir),
+            child: Icon(icon, size: btnSize * 0.6),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      width: size,
+      padding: EdgeInsets.all(pad),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.22),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: <BoxShadow>[
+          BoxShadow(color: Colors.black.withOpacity(0.35), blurRadius: 18, offset: const Offset(0, 10)),
+        ],
+        border: Border.all(color: Colors.white24, width: 2),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          // Direction cluster
+          Container(
+            width: dpadSize,
+            height: dpadSize,
+            decoration: glossy(0.30),
+            child: Stack(
+              children: <Widget>[
+                arrowBtn(Icons.keyboard_arrow_up, MoveDirection.up, align: Alignment.topCenter),
+                arrowBtn(Icons.keyboard_arrow_down, MoveDirection.down, align: Alignment.bottomCenter),
+                arrowBtn(Icons.keyboard_arrow_left, MoveDirection.left, align: Alignment.centerLeft),
+                arrowBtn(Icons.keyboard_arrow_right, MoveDirection.right, align: Alignment.centerRight),
+                // Center select circle for 3310 vibe
+                Align(
+                  alignment: Alignment.center,
+                  child: Container(
+                    width: dpadSize * 0.28,
+                    height: dpadSize * 0.28,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.black.withOpacity(0.28),
+                      boxShadow: <BoxShadow>[
+                        BoxShadow(color: Colors.black.withOpacity(0.35), blurRadius: 16, offset: const Offset(0, 6)),
+                      ],
+                      border: Border.all(color: Colors.white24, width: 2),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: pad),
+          // Soft keys (dummy UI for authenticity)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Expanded(
+                child: Container(
+                  height: btnSize * 0.9,
+                  decoration: glossy(0.28),
+                  alignment: Alignment.center,
+                  child: const Text('Seç', style: TextStyle(color: Colors.white70)),
+                ),
+              ),
+              SizedBox(width: pad),
+              Expanded(
+                child: Container(
+                  height: btnSize * 0.9,
+                  decoration: glossy(0.28),
+                  alignment: Alignment.center,
+                  child: const Text('Geri', style: TextStyle(color: Colors.white70)),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: pad),
+          // Numeric pad row mock (purely decorative for nostalgia)
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: pad,
+            runSpacing: pad,
+            children: List<Widget>.generate(9, (int i) {
+              return Container(
+                width: btnSize * 0.85,
+                height: btnSize * 0.85,
+                decoration: glossy(0.26),
+                alignment: Alignment.center,
+                child: Text('${i + 1}', style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
+              );
+            })
+              ..add(Container(
+                width: (btnSize * 0.85) * 3 + pad * 2,
+                height: btnSize * 0.85,
+                decoration: glossy(0.26),
+                alignment: Alignment.center,
+                child: const Text('0', style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
+              )),
+          ),
         ],
       ),
     );
