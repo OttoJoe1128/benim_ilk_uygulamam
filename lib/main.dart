@@ -52,29 +52,29 @@ class _SnakeGamePageState extends State<SnakeGamePage> {
     const _GameTheme(
       key: 'space',
       label: 'Uzay',
-      backgroundUrl: 'https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3?w=1600',
+      backgroundUrl: 'https://images.unsplash.com/photo-1447433819943-74a20887a81e?q=80&w=1920&auto=format&fit=crop',
       snakeHead: Color(0xFF00E5FF),
       snakeBody: Color(0xFF26C6DA),
       gridColor: Color(0x33B2EBF2),
-      foodUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=256',
+      foodUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=512&auto=format&fit=crop',
     ),
     const _GameTheme(
       key: 'hell',
       label: 'Cehennem',
-      backgroundUrl: 'https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=1600',
+      backgroundUrl: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1920&auto=format&fit=crop',
       snakeHead: Color(0xFFFF6D00),
       snakeBody: Color(0xFFFF8F00),
       gridColor: Color(0x33FFAB40),
-      foodUrl: 'https://images.unsplash.com/photo-1604909053282-3cdfb0b96517?w=256',
+      foodUrl: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=512&auto=format&fit=crop',
     ),
     const _GameTheme(
       key: 'zombie',
       label: 'Zombi',
-      backgroundUrl: 'https://images.unsplash.com/photo-1605559424843-9c95327c71d4?w=1600',
-      snakeHead: Color(0xFF43A047),
-      snakeBody: Color(0xFF66BB6A),
-      gridColor: Color(0x334CAF50),
-      foodUrl: 'https://images.unsplash.com/photo-1559750988-c5ea45c5b5c8?w=256',
+      backgroundUrl: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1920&auto=format&fit=crop',
+      snakeHead: Color(0xFFBDBDBD),
+      snakeBody: Color(0xFF9E9E9E),
+      gridColor: Color(0x33212121),
+      foodUrl: 'https://images.unsplash.com/photo-1605979257913-1702b77d8a4a?q=80&w=512&auto=format&fit=crop',
     ),
   ];
 
@@ -332,10 +332,11 @@ class _SnakeGamePageState extends State<SnakeGamePage> {
                               return Positioned(
                                 left: p.x * cellSize,
                                 top: p.y * cellSize,
-                                child: _buildCell(
-                                  cellSize,
-                                  isHead ? theme.snakeHead : theme.snakeBody,
-                                  rounded: isHead,
+                                child: _SnakeSegment(
+                                  size: cellSize,
+                                  isHead: isHead,
+                                  theme: theme,
+                                  direction: currentDirection,
                                 ),
                               );
                             }),
@@ -429,6 +430,106 @@ class _SnakeGamePageState extends State<SnakeGamePage> {
       child: Icon(icon),
     );
   }
+}
+
+class _SnakeSegment extends StatelessWidget {
+  const _SnakeSegment({required this.size, required this.isHead, required this.theme, required this.direction});
+
+  final double size;
+  final bool isHead;
+  final _GameTheme theme;
+  final MoveDirection direction;
+
+  @override
+  Widget build(BuildContext context) {
+    if (theme.key == 'zombie') {
+      return _skeletonSegment();
+    } else if (theme.key == 'hell') {
+      return _fierySegment();
+    } else {
+      return _neonSegment();
+    }
+  }
+
+  Widget _neonSegment() {
+    final Color base = isHead ? theme.snakeHead : theme.snakeBody;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: base.withOpacity(0.85),
+        borderRadius: BorderRadius.circular(isHead ? size * 0.28 : size * 0.18),
+        boxShadow: <BoxShadow>[
+          BoxShadow(color: base.withOpacity(0.6), blurRadius: 12, spreadRadius: 1),
+        ],
+        border: Border.all(color: Colors.white24, width: 1.5),
+      ),
+    );
+  }
+
+  Widget _fierySegment() {
+    final Color head = isHead ? theme.snakeHead : theme.snakeBody;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: <Color>[head, Colors.deepOrangeAccent],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(isHead ? size * 0.28 : size * 0.16),
+        boxShadow: const <BoxShadow>[
+          BoxShadow(color: Color(0x55FF6D00), blurRadius: 10, spreadRadius: 1),
+        ],
+        border: Border.all(color: Colors.black26, width: 1),
+      ),
+      child: Align(
+        alignment: Alignment.bottomRight,
+        child: Container(
+          width: size * 0.35,
+          height: size * 0.35,
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: RadialGradient(colors: <Color>[Color(0x66FFFFFF), Colors.transparent]),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _skeletonSegment() {
+    return CustomPaint(
+      size: Size(size, size),
+      painter: _BonePainter(isHead: isHead),
+    );
+  }
+}
+
+class _BonePainter extends CustomPainter {
+  _BonePainter({required this.isHead});
+  final bool isHead;
+
+  @override
+  void paint(Canvas canvas, Size sz) {
+    final Paint bone = Paint()
+      ..color = const Color(0xFFE0E0E0)
+      ..style = PaintingStyle.fill;
+    final Rect r = Offset.zero & sz;
+    if (isHead) {
+      final RRect skull = RRect.fromRectAndRadius(r.deflate(sz.width * 0.1), Radius.circular(sz.width * 0.3));
+      canvas.drawRRect(skull, bone);
+      final Paint eye = Paint()..color = const Color(0xFF424242);
+      canvas.drawCircle(Offset(sz.width * 0.35, sz.height * 0.4), sz.width * 0.08, eye);
+      canvas.drawCircle(Offset(sz.width * 0.65, sz.height * 0.4), sz.width * 0.08, eye);
+    } else {
+      final RRect vertebra = RRect.fromRectAndRadius(r.deflate(sz.width * 0.2), Radius.circular(sz.width * 0.2));
+      canvas.drawRRect(vertebra, bone);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _BonePainter oldDelegate) => false;
 }
 
 class _Joystick extends StatefulWidget {
@@ -723,7 +824,7 @@ class _NokiaKeypad extends StatelessWidget {
           SizedBox(height: pad * 0.7),
           _KeyRow(labels: const <String>['4','5','6'], btnSize: btnSize, onTap: (String k){ if (k=='4') onDirection(MoveDirection.left); if (k=='6') onDirection(MoveDirection.right); }),
           SizedBox(height: pad * 0.7),
-          _KeyRow(labels: const <String>['7','8','9'], btnSize: btnSize, onTap: (String k){ if (k=='9') onDirection(MoveDirection.down); }),
+          _KeyRow(labels: const <String>['7','8','9'], btnSize: btnSize, onTap: (String k){ if (k=='8') onDirection(MoveDirection.down); }),
           SizedBox(height: pad * 0.7),
           _KeyRow(labels: const <String>['*','0','#'], btnSize: btnSize, onTap: (String k){}),
         ],
@@ -739,7 +840,7 @@ class _KeyRow extends StatelessWidget {
   final double btnSize;
   final void Function(String label) onTap;
 
-  bool _isDirectional(String l) => l == '2' || l == '4' || l == '6' || l == '9';
+  bool _isDirectional(String l) => l == '2' || l == '4' || l == '6' || l == '8';
 
   String? _subLabel(String l) {
     switch (l) {
@@ -933,6 +1034,8 @@ class _FoodWidgetState extends State<_FoodWidget> with SingleTickerProviderState
   Widget build(BuildContext context) {
     final double size = widget.size;
     final String imageUrl = widget.theme.foodUrl;
+    // Override food appearance per theme (amanita in zombie)
+    final bool isZombie = widget.theme.key == 'zombie';
     return SizedBox(
       width: size,
       height: size,
@@ -950,12 +1053,9 @@ class _FoodWidgetState extends State<_FoodWidget> with SingleTickerProviderState
                     BoxShadow(color: Colors.black.withOpacity(0.35), blurRadius: 10, offset: const Offset(0, 4)),
                     BoxShadow(color: Colors.white.withOpacity(0.08), blurRadius: 20, spreadRadius: -8),
                   ],
-                  gradient: RadialGradient(
-                    colors: <Color>[
-                      Colors.white.withOpacity(0.95),
-                      Colors.white.withOpacity(0.75),
-                    ],
-                  ),
+                  gradient: isZombie
+                      ? const RadialGradient(colors: <Color>[Color(0xFFFFCDD2), Color(0xFFE57373)])
+                      : RadialGradient(colors: <Color>[Colors.white.withOpacity(0.95), Colors.white.withOpacity(0.75)]),
                 ),
                 child: Padding(
                   padding: EdgeInsets.all(size * 0.08),
