@@ -354,49 +354,53 @@ class _SnakeGamePageState extends State<SnakeGamePage> {
                 left: 16,
                 right: 16,
                 bottom: 20,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
-                    // Left joystick (only in two-handed mode)
-                    if (_twoHanded)
-                      _Joystick(
-                        size: min(200, constraints.maxWidth * 0.35),
-                        onDirectionChanged: (MoveDirection? dir) {
-                          if (dir != null) _changeDirection(dir);
-                        },
-                        onTouchStart: (MoveDirection? initial) {
-                          _ensureStarted();
-                          if (initial != null) _changeDirection(initial);
-                          _step();
-                        },
+                    // Centered controls row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.black.withOpacity(0.45),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          onPressed: _stop,
+                          icon: const Icon(Icons.stop_circle_outlined),
+                          label: const Text('Stop'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    // Main control: Joystick centered or D-pad when two-handed
+                    if (!_twoHanded)
+                      Center(
+                        child: _Joystick(
+                          size: min(220, constraints.maxWidth * 0.55),
+                          onDirectionChanged: (MoveDirection? dir) {
+                            if (dir != null) _changeDirection(dir);
+                          },
+                          onTouchStart: (MoveDirection? initial) {
+                            _ensureStarted();
+                            if (initial != null) _changeDirection(initial);
+                            _step();
+                          },
+                        ),
                       )
                     else
-                      const SizedBox(width: 1),
-                    // Stop button in the middle
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black.withOpacity(0.45),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      Center(
+                        child: _DPad(
+                          size: min(240, constraints.maxWidth * 0.6),
+                          onPressed: (MoveDirection dir) {
+                            _changeDirection(dir);
+                            _ensureStarted();
+                            _step();
+                          },
+                        ),
                       ),
-                      onPressed: _stop,
-                      icon: const Icon(Icons.stop_circle_outlined),
-                      label: const Text('Stop'),
-                    ),
-                    // Right joystick (always visible)
-                    _Joystick(
-                      size: min(200, constraints.maxWidth * 0.35),
-                      onDirectionChanged: (MoveDirection? dir) {
-                        if (dir != null) _changeDirection(dir);
-                      },
-                      onTouchStart: (MoveDirection? initial) {
-                        _ensureStarted();
-                        if (initial != null) _changeDirection(initial);
-                        _step();
-                      },
-                    ),
                   ],
                 ),
               ),
@@ -594,6 +598,66 @@ class _GridPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _GridPainter oldDelegate) {
     return oldDelegate.numRows != numRows || oldDelegate.numCols != numCols || oldDelegate.color != color;
+  }
+}
+
+class _DPad extends StatelessWidget {
+  const _DPad({required this.size, required this.onPressed});
+
+  final double size;
+  final void Function(MoveDirection direction) onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final double buttonSize = size * 0.32;
+    final BorderRadius radius = BorderRadius.circular(14);
+
+    Widget buildBtn(IconData icon, MoveDirection dir) {
+      return SizedBox(
+        width: buttonSize,
+        height: buttonSize,
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.black.withOpacity(0.35),
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: radius),
+            shadowColor: Colors.black.withOpacity(0.35),
+            elevation: 6,
+          ),
+          onPressed: () => onPressed(dir),
+          child: Icon(icon, size: buttonSize * 0.6),
+        ),
+      );
+    }
+
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Stack(
+        children: <Widget>[
+          // Center circle for nostalgia
+          Align(
+            alignment: Alignment.center,
+            child: Container(
+              width: size * 0.28,
+              height: size * 0.28,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.black.withOpacity(0.28),
+                boxShadow: <BoxShadow>[
+                  BoxShadow(color: Colors.black.withOpacity(0.35), blurRadius: 16, offset: const Offset(0, 6)),
+                ],
+                border: Border.all(color: Colors.white24, width: 2),
+              ),
+            ),
+          ),
+          Align(alignment: Alignment.topCenter, child: buildBtn(Icons.keyboard_arrow_up, MoveDirection.up)),
+          Align(alignment: Alignment.bottomCenter, child: buildBtn(Icons.keyboard_arrow_down, MoveDirection.down)),
+          Align(alignment: Alignment.centerLeft, child: buildBtn(Icons.keyboard_arrow_left, MoveDirection.left)),
+          Align(alignment: Alignment.centerRight, child: buildBtn(Icons.keyboard_arrow_right, MoveDirection.right)),
+        ],
+      ),
+    );
   }
 }
 
