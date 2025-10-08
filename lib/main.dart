@@ -719,16 +719,13 @@ class _NokiaKeypad extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          _KeyRow(labels: const <String>['1', '2', '3'], btnSize: btnSize, onTap: (String k) { if (k == '2') onDirection(MoveDirection.up); }),
+          _KeyRow(labels: const <String>['1','2','3'], btnSize: btnSize, onTap: (String k){ if (k=='2') onDirection(MoveDirection.up); }),
           SizedBox(height: pad * 0.7),
-          _KeyRow(labels: const <String>['4', '5', '6'], btnSize: btnSize, onTap: (String k) {
-            if (k == '4') onDirection(MoveDirection.left);
-            if (k == '6') onDirection(MoveDirection.right);
-          }),
+          _KeyRow(labels: const <String>['4','5','6'], btnSize: btnSize, onTap: (String k){ if (k=='4') onDirection(MoveDirection.left); if (k=='6') onDirection(MoveDirection.right); }),
           SizedBox(height: pad * 0.7),
-          _KeyRow(labels: const <String>['7', '8', '9'], btnSize: btnSize, onTap: (String k) { if (k == '9') onDirection(MoveDirection.down); }),
+          _KeyRow(labels: const <String>['7','8','9'], btnSize: btnSize, onTap: (String k){ if (k=='9') onDirection(MoveDirection.down); }),
           SizedBox(height: pad * 0.7),
-          _KeyRow(labels: const <String>['*', '0', '#'], btnSize: btnSize, onTap: (String k) {}),
+          _KeyRow(labels: const <String>['*','0','#'], btnSize: btnSize, onTap: (String k){}),
         ],
       ),
     );
@@ -742,46 +739,140 @@ class _KeyRow extends StatelessWidget {
   final double btnSize;
   final void Function(String label) onTap;
 
+  bool _isDirectional(String l) => l == '2' || l == '4' || l == '6' || l == '9';
+
+  String? _subLabel(String l) {
+    switch (l) {
+      case '2': return 'ABC';
+      case '3': return 'DEF';
+      case '4': return 'GHI';
+      case '5': return 'JKL';
+      case '6': return 'MNO';
+      case '7': return 'PQRS';
+      case '8': return 'TUV';
+      case '9': return 'WXYZ';
+      default: return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
-      children: labels
-          .map((String label) => Padding(
-                padding: EdgeInsets.symmetric(horizontal: btnSize * 0.12),
-                child: _PillKey(label: label, size: btnSize, onTap: () => onTap(label)),
-              ))
-          .toList(),
+      children: labels.map((String label) {
+        return Padding(
+          padding: EdgeInsets.symmetric(horizontal: btnSize * 0.12),
+          child: _PhysicalKey(
+            label: label,
+            subLabel: _subLabel(label),
+            size: btnSize,
+            neon: _isDirectional(label),
+            onPressed: () => onTap(label),
+          ),
+        );
+      }).toList(),
     );
   }
 }
 
-class _PillKey extends StatelessWidget {
-  const _PillKey({required this.label, required this.size, required this.onTap});
+class _PhysicalKey extends StatefulWidget {
+  const _PhysicalKey({required this.label, required this.size, required this.onPressed, this.subLabel, this.neon = false});
 
   final String label;
+  final String? subLabel;
   final double size;
-  final VoidCallback onTap;
+  final VoidCallback onPressed;
+  final bool neon;
+
+  @override
+  State<_PhysicalKey> createState() => _PhysicalKeyState();
+}
+
+class _PhysicalKeyState extends State<_PhysicalKey> {
+  bool _pressed = false;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: size * 0.95,
-      height: size * 0.8,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(size * 0.45),
-        onTap: onTap,
-        child: Ink(
+    final double w = widget.size * 0.95;
+    final double h = widget.size * 0.85;
+    final BorderRadius br = BorderRadius.circular(widget.size * 0.45);
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapCancel: () => setState(() => _pressed = false),
+      onTapUp: (_) {
+        setState(() => _pressed = false);
+        widget.onPressed();
+      },
+      child: AnimatedScale(
+        duration: const Duration(milliseconds: 80),
+        scale: _pressed ? 0.96 : 1.0,
+        child: Container(
+          width: w,
+          height: h,
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.26),
-            borderRadius: BorderRadius.circular(size * 0.45),
+            borderRadius: br,
+            gradient: LinearGradient(
+              colors: <Color>[
+                Colors.grey.shade200.withOpacity(0.35),
+                Colors.black.withOpacity(0.28),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
             boxShadow: <BoxShadow>[
-              BoxShadow(color: Colors.black.withOpacity(0.35), blurRadius: 10, offset: const Offset(0, 6)),
+              BoxShadow(color: Colors.black.withOpacity(_pressed ? 0.25 : 0.35), blurRadius: _pressed ? 6 : 12, offset: const Offset(0, 6)),
+              if (widget.neon)
+                BoxShadow(color: const Color(0xFF00E5FF).withOpacity(0.35), blurRadius: 12, spreadRadius: 1),
             ],
             border: Border.all(color: Colors.white24, width: 2),
           ),
-          child: Center(
-            child: Text(label, style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
+          child: Stack(
+            children: <Widget>[
+              // Gloss highlight
+              Positioned(
+                left: w * 0.08,
+                top: h * 0.08,
+                child: Container(
+                  width: w * 0.35,
+                  height: h * 0.35,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(colors: <Color>[Colors.white.withOpacity(0.28), Colors.transparent]),
+                  ),
+                ),
+              ),
+              // Inner bottom shade
+              Positioned(
+                right: 0,
+                bottom: 0,
+                left: 0,
+                child: Container(
+                  height: h * 0.45,
+                  decoration: BoxDecoration(
+                    borderRadius: br,
+                    gradient: LinearGradient(
+                      colors: <Color>[Colors.black.withOpacity(0.12), Colors.transparent],
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                    ),
+                  ),
+                ),
+              ),
+              // Labels
+              Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Text(widget.label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 18)),
+                    if (widget.subLabel != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(widget.subLabel!, style: const TextStyle(color: Colors.white70, fontSize: 9, letterSpacing: 0.5)),
+                      ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),
