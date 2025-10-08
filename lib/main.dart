@@ -45,6 +45,38 @@ class _SnakeGamePageState extends State<SnakeGamePage> {
   bool isPlaying = false;
   int score = 0;
 
+  // Themes
+  int _currentThemeIndex = 0;
+  late final List<_GameTheme> _themes = <_GameTheme>[
+    const _GameTheme(
+      key: 'space',
+      label: 'Uzay',
+      backgroundUrl: 'https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3?w=1600',
+      snakeHead: Color(0xFF00E5FF),
+      snakeBody: Color(0xFF26C6DA),
+      gridColor: Color(0x33B2EBF2),
+      foodUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=256',
+    ),
+    const _GameTheme(
+      key: 'hell',
+      label: 'Cehennem',
+      backgroundUrl: 'https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=1600',
+      snakeHead: Color(0xFFFF6D00),
+      snakeBody: Color(0xFFFF8F00),
+      gridColor: Color(0x33FFAB40),
+      foodUrl: 'https://images.unsplash.com/photo-1604909053282-3cdfb0b96517?w=256',
+    ),
+    const _GameTheme(
+      key: 'zombie',
+      label: 'Zombi',
+      backgroundUrl: 'https://images.unsplash.com/photo-1605559424843-9c95327c71d4?w=1600',
+      snakeHead: Color(0xFF43A047),
+      snakeBody: Color(0xFF66BB6A),
+      gridColor: Color(0x334CAF50),
+      foodUrl: 'https://images.unsplash.com/photo-1559750988-c5ea45c5b5c8?w=256',
+    ),
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -84,6 +116,12 @@ class _SnakeGamePageState extends State<SnakeGamePage> {
     setState(() {});
   }
 
+  void _ensureStarted() {
+    if (!isPlaying) {
+      _start();
+    }
+  }
+
   Point<int> _spawnFood() {
     while (true) {
       final int x = _random.nextInt(numCols);
@@ -101,6 +139,7 @@ class _SnakeGamePageState extends State<SnakeGamePage> {
         (currentDirection == MoveDirection.right && next == MoveDirection.left);
     if (isOpposite) return;
     currentDirection = next;
+    _ensureStarted();
   }
 
   void _step() {
@@ -189,10 +228,8 @@ class _SnakeGamePageState extends State<SnakeGamePage> {
 
   @override
   Widget build(BuildContext context) {
+    final _GameTheme theme = _themes[_currentThemeIndex];
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Yılan Oyunu'),
-      ),
       body: LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
           final double gridSize = min(constraints.maxWidth, constraints.maxHeight - 120);
@@ -200,29 +237,56 @@ class _SnakeGamePageState extends State<SnakeGamePage> {
 
           return Stack(
             children: <Widget>[
+              // Background
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: NetworkImage(theme.backgroundUrl),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: <Color>[
+                          Colors.black.withOpacity(0.25),
+                          Colors.black.withOpacity(0.15),
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
               Column(
                 children: <Widget>[
+                  const SizedBox(height: 8),
                   Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: <Widget>[
-                        Row(
-                          children: <Widget>[
-                            const Icon(Icons.star, color: Colors.amber),
-                            const SizedBox(width: 8),
-                            Text('Skor: $score', style: const TextStyle(fontSize: 18)),
-                          ],
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.35),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            children: <Widget>[
+                              const Icon(Icons.star, color: Colors.amber),
+                              const SizedBox(width: 8),
+                              const Text('Skor: ', style: TextStyle(fontSize: 18, color: Colors.white)),
+                              Text('$score', style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.w700)),
+                            ],
+                          ),
                         ),
-                        ElevatedButton.icon(
-                          onPressed: isPlaying ? _stop : _start,
-                          icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
-                          label: Text(isPlaying ? 'Duraklat' : 'Başlat'),
-                        ),
-                        ElevatedButton.icon(
-                          onPressed: _resetGame,
-                          icon: const Icon(Icons.restart_alt),
-                          label: const Text('Sıfırla'),
+                        const Spacer(),
+                        _ThemeSelectors(
+                          themes: _themes,
+                          selectedIndex: _currentThemeIndex,
+                          onSelected: (int i) => setState(() => _currentThemeIndex = i),
                         ),
                       ],
                     ),
@@ -234,15 +298,18 @@ class _SnakeGamePageState extends State<SnakeGamePage> {
                         width: gridSize,
                         height: gridSize,
                         decoration: BoxDecoration(
-                          color: Colors.grey.shade200,
-                          border: Border.all(color: Colors.grey.shade400),
+                          color: Colors.black.withOpacity(0.08),
+                          border: Border.all(color: Colors.white24),
+                          boxShadow: <BoxShadow>[
+                            BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 12),
+                          ],
                         ),
                         child: Stack(
                           children: <Widget>[
                             Positioned(
                               left: food.x * cellSize,
                               top: food.y * cellSize,
-                              child: _buildCell(cellSize, Colors.redAccent, rounded: true),
+                              child: _FoodWidget(size: cellSize * 0.9, imageUrl: theme.foodUrl),
                             ),
                             ...snake.map((Point<int> p) {
                               final bool isHead = p == snake.first;
@@ -251,14 +318,14 @@ class _SnakeGamePageState extends State<SnakeGamePage> {
                                 top: p.y * cellSize,
                                 child: _buildCell(
                                   cellSize,
-                                  isHead ? Colors.green.shade700 : Colors.green,
+                                  isHead ? theme.snakeHead : theme.snakeBody,
                                   rounded: isHead,
                                 ),
                               );
                             }),
                             CustomPaint(
                               size: Size(gridSize, gridSize),
-                              painter: _GridPainter(numRows: numRows, numCols: numCols),
+                              painter: _GridPainter(numRows: numRows, numCols: numCols, color: theme.gridColor),
                             ),
                           ],
                         ),
@@ -268,16 +335,36 @@ class _SnakeGamePageState extends State<SnakeGamePage> {
                 ],
               ),
               Positioned(
-                left: 0,
-                right: 0,
+                left: 24,
+                right: 24,
                 bottom: 24,
-                child: Center(
-                  child: _Joystick(
-                    size: min(220, constraints.maxWidth * 0.6),
-                    onDirectionChanged: (MoveDirection? dir) {
-                      if (dir != null) _changeDirection(dir);
-                    },
-                  ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    _Joystick(
+                      size: min(220, constraints.maxWidth * 0.55),
+                      onDirectionChanged: (MoveDirection? dir) {
+                        if (dir != null) _changeDirection(dir);
+                      },
+                      onTouchStart: (MoveDirection? initial) {
+                        _ensureStarted();
+                        if (initial != null) _changeDirection(initial);
+                        _step();
+                      },
+                    ),
+                    const SizedBox(width: 16),
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.black.withOpacity(0.45),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      onPressed: _stop,
+                      icon: const Icon(Icons.stop_circle_outlined),
+                      label: const Text('Stop'),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -308,10 +395,11 @@ class _SnakeGamePageState extends State<SnakeGamePage> {
 }
 
 class _Joystick extends StatefulWidget {
-  const _Joystick({required this.size, required this.onDirectionChanged});
+  const _Joystick({required this.size, required this.onDirectionChanged, this.onTouchStart});
 
   final double size;
   final void Function(MoveDirection? direction) onDirectionChanged;
+  final void Function(MoveDirection? initialDirection)? onTouchStart;
 
   @override
   State<_Joystick> createState() => _JoystickState();
@@ -378,7 +466,11 @@ class _JoystickState extends State<_Joystick> {
           ),
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onPanStart: (DragStartDetails d) => _updateKnob(d.localPosition),
+            onPanStart: (DragStartDetails d) {
+              _updateKnob(d.localPosition);
+              final MoveDirection? initial = _directionFromOffset(_knob);
+              if (widget.onTouchStart != null) widget.onTouchStart!(initial);
+            },
             onPanUpdate: (DragUpdateDetails d) => _updateKnob(d.localPosition),
             onPanEnd: (_) => _resetKnob(),
             onPanCancel: _resetKnob,
@@ -429,18 +521,28 @@ class _JoystickState extends State<_Joystick> {
       ),
     );
   }
+
+  MoveDirection? _directionFromOffset(Offset delta) {
+    if (delta.distance < _radius * 0.25) return null;
+    if (delta.dx.abs() > delta.dy.abs()) {
+      return delta.dx > 0 ? MoveDirection.right : MoveDirection.left;
+    } else {
+      return delta.dy > 0 ? MoveDirection.down : MoveDirection.up;
+    }
+  }
 }
 
 class _GridPainter extends CustomPainter {
-  const _GridPainter({required this.numRows, required this.numCols});
+  const _GridPainter({required this.numRows, required this.numCols, this.color = const Color(0x11000000)});
 
   final int numRows;
   final int numCols;
+  final Color color;
 
   @override
   void paint(Canvas canvas, Size size) {
     final Paint paint = Paint()
-      ..color = Colors.black12
+      ..color = color
       ..strokeWidth = 1;
 
     final double cellWidth = size.width / numCols;
@@ -458,6 +560,110 @@ class _GridPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _GridPainter oldDelegate) {
-    return oldDelegate.numRows != numRows || oldDelegate.numCols != numCols;
+    return oldDelegate.numRows != numRows || oldDelegate.numCols != numCols || oldDelegate.color != color;
+  }
+}
+
+class _GameTheme {
+  const _GameTheme({
+    required this.key,
+    required this.label,
+    required this.backgroundUrl,
+    required this.snakeHead,
+    required this.snakeBody,
+    required this.gridColor,
+    required this.foodUrl,
+  });
+
+  final String key;
+  final String label;
+  final String backgroundUrl;
+  final Color snakeHead;
+  final Color snakeBody;
+  final Color gridColor;
+  final String foodUrl;
+}
+
+class _FoodWidget extends StatelessWidget {
+  const _FoodWidget({required this.size, required this.imageUrl});
+
+  final double size;
+  final String imageUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(size * 0.2),
+        child: Image.network(
+          imageUrl,
+          fit: BoxFit.cover,
+          errorBuilder: (BuildContext _, Object __, StackTrace? ___) {
+            return Container(
+              color: Colors.redAccent,
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _ThemeSelectors extends StatelessWidget {
+  const _ThemeSelectors({
+    required this.themes,
+    required this.selectedIndex,
+    required this.onSelected,
+  });
+
+  final List<_GameTheme> themes;
+  final int selectedIndex;
+  final ValueChanged<int> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        for (int i = 0; i < themes.length; i++)
+          Padding(
+            padding: const EdgeInsets.only(left: 8),
+            child: InkWell(
+              onTap: () => onSelected(i),
+              borderRadius: BorderRadius.circular(999),
+              child: Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: i == selectedIndex ? Colors.white : Colors.white54,
+                    width: i == selectedIndex ? 3 : 1.5,
+                  ),
+                  boxShadow: <BoxShadow>[
+                    BoxShadow(color: Colors.black.withOpacity(0.25), blurRadius: 8),
+                  ],
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: <Widget>[
+                    Image.network(themes[i].backgroundUrl, fit: BoxFit.cover),
+                    Container(color: Colors.black26),
+                    Center(
+                      child: Text(
+                        themes[i].label.substring(0, 1),
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
   }
 }
