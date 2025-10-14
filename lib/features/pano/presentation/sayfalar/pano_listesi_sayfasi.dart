@@ -8,6 +8,7 @@ import '../../../../core/di/servis_bulucu.dart';
 import '../../../domain/sozlesmeler/pano_deposu.dart';
 import '../durum/pano_durumu.dart';
 import '../bilesenler/bos_durum.dart';
+import '../../../../core/utils/zaman_formatlayici.dart';
 
 @RoutePage()
 class PanoListesiSayfasi extends ConsumerStatefulWidget {
@@ -53,9 +54,10 @@ class _PanoListesiSayfasiState extends ConsumerState<PanoListesiSayfasi> {
                 separatorBuilder: (_, __) => const Divider(height: 1),
                 itemBuilder: (BuildContext context, int index) {
                   final Pano p = panolar[index];
+                  final String kalan = ZamanFormatlayici.formatKalanSure(p.bitis);
                   return ListTile(
                     title: Text(p.baslik),
-                    subtitle: Text('Bitiş: ${p.bitis}'),
+                    subtitle: Text('Kalan: $kalan'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => context.router.pushNamed('/pano/${p.id}'),
                   );

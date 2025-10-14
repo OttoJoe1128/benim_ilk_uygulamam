@@ -58,26 +58,37 @@ class _PanoSayfasiState extends ConsumerState<PanoSayfasi> {
                 ),
             },
           ),
-          Padding(
-            padding: const EdgeInsets.all(8),
-            child: Row(
-              children: <Widget>[
-                Expanded(
-                  child: TextField(
-                    controller: mesajKontrol,
-                    decoration: const InputDecoration(hintText: 'Mesaj yaz...'),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: Row(
+                children: <Widget>[
+                  Expanded(
+                    child: TextField(
+                      controller: mesajKontrol,
+                      decoration:
+                          const InputDecoration(hintText: 'Mesaj yaz...', prefixIcon: Icon(Icons.message_outlined)),
+                      onSubmitted: (_) async {
+                        final String yazi = mesajKontrol.text.trim();
+                        if (yazi.isEmpty) return;
+                        await ref.read(_providerFor(panoId).notifier).gonderMesaj(yazi);
+                        mesajKontrol.clear();
+                      },
+                    ),
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.send),
-                  onPressed: () async {
-                    final String yazi = mesajKontrol.text.trim();
-                    if (yazi.isEmpty) return;
-                    await ref.read(_providerFor(panoId).notifier).gonderMesaj(yazi);
-                    mesajKontrol.clear();
-                  },
-                )
-              ],
+                  const SizedBox(width: 8),
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.send),
+                    label: const Text('Gönder'),
+                    onPressed: () async {
+                      final String yazi = mesajKontrol.text.trim();
+                      if (yazi.isEmpty) return;
+                      await ref.read(_providerFor(panoId).notifier).gonderMesaj(yazi);
+                      mesajKontrol.clear();
+                    },
+                  )
+                ],
+              ),
             ),
           )
         ],
