@@ -28,7 +28,11 @@ class _PanoListesiSayfasiState extends ConsumerState<PanoListesiSayfasi> {
     return Scaffold(
       appBar: AppBar(title: const Text('Panolar')),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => context.router.pushNamed('/olustur'),
+        onPressed: () async {
+          await context.router.pushNamed('/olustur');
+          if (!mounted) return;
+          await ref.read(panoDenetleyiciProvider.notifier).getirPanolari();
+        },
         child: const Icon(Icons.add),
       ),
       body: switch (durum) {
@@ -40,7 +44,8 @@ class _PanoListesiSayfasiState extends ConsumerState<PanoListesiSayfasi> {
               final Pano p = panolar[index];
               return ListTile(
                 title: Text(p.baslik),
-                subtitle: Text('Bitiş: ${p.bitis}')
+                subtitle: Text('Bitiş: ${p.bitis}'),
+                onTap: () => context.router.pushNamed('/pano/${p.id}'),
               );
             },
           ),

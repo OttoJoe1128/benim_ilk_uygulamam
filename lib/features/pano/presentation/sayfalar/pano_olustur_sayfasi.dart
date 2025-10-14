@@ -1,16 +1,20 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/zaman_sabitleri.dart';
+import '../../presentation/denetleyiciler/pano_denetleyici.dart';
+import '../../domain/sozlesmeler/pano_deposu.dart';
+import '../../../../core/di/servis_bulucu.dart';
 
 @RoutePage()
-class PanoOlusturSayfasi extends StatefulWidget {
+class PanoOlusturSayfasi extends ConsumerStatefulWidget {
   const PanoOlusturSayfasi({super.key});
   @override
-  State<PanoOlusturSayfasi> createState() => _PanoOlusturSayfasiState();
+  ConsumerState<PanoOlusturSayfasi> createState() => _PanoOlusturSayfasiState();
 }
 
-class _PanoOlusturSayfasiState extends State<PanoOlusturSayfasi> {
+class _PanoOlusturSayfasiState extends ConsumerState<PanoOlusturSayfasi> {
   final TextEditingController baslikKontrol = TextEditingController();
   SureSecenegi secenek = SureSecenegi.birSaat;
 
@@ -47,10 +51,15 @@ class _PanoOlusturSayfasiState extends State<PanoOlusturSayfasi> {
             ),
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
+                final String baslik = baslikKontrol.text.trim();
+                if (baslik.isEmpty) return;
                 final Duration sure = donusturSureSecenegi(secenek);
                 final DateTime bitis = DateTime.now().add(sure);
-                // TODO: Denetleyici üzerinden oluştur ve geri dön
+                final PanoDenetleyici denetleyici =
+                    PanoDenetleyici(panoDeposu: servisBulucu.get<PanoDeposu>());
+                await denetleyici.olusturPano(baslik: baslik, bitis: bitis);
+                if (!mounted) return;
                 Navigator.of(context).pop();
               },
               child: const Text('Oluştur'),
