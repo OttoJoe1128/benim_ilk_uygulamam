@@ -1,0 +1,26 @@
+name: Firebase Firestore Rules Deploy
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'firestore.rules'
+      - '.github/workflows/firebase-rules-deploy.yaml'
+  workflow_dispatch:
+
+jobs:
+  deploy-rules:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Kod deposunu al
+        uses: actions/checkout@v4
+
+      - name: Firebase Firestore kurallarını dağıt
+        uses: w9jds/firebase-action@v2.2.0
+        with:
+          args: deploy --only firestore:rules --project $PROJECT_ID
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
