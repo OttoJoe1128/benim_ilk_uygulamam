@@ -43,12 +43,17 @@ class _PanoSayfasiState extends ConsumerState<PanoSayfasi> {
             child: switch (durum) {
               _Yukleniyor() => const Center(child: CircularProgressIndicator()),
               _Basarisiz(:final String mesaj) => Center(child: Text(mesaj)),
-              _Basarili(:final List<Mesaj> mesajlar) => ListView.builder(
+              _Basarili(:final List<Mesaj> mesajlar) => ListView.separated(
                   reverse: true,
                   itemCount: mesajlar.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
                   itemBuilder: (BuildContext context, int index) {
                     final Mesaj m = mesajlar[mesajlar.length - 1 - index];
-                    return ListTile(title: Text(m.icerik), subtitle: Text(m.zaman.toIso8601String()));
+                    return ListTile(
+                      title: Text(m.icerik),
+                      subtitle: Text(m.zaman.toIso8601String()),
+                      leading: const CircleAvatar(child: Icon(Icons.person)),
+                    );
                   },
                 ),
             },

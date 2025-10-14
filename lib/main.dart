@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/di/servis_bulucu.dart';
 import 'core/routing/app_router.dart';
+import 'core/theme/uygulama_temasi.dart';
 
 void main() {
   baslatServisBulucu();
@@ -20,10 +21,7 @@ class MyApp extends StatelessWidget {
     final AppRouter router = AppRouter();
     return MaterialApp.router(
       title: 'Anonim Panolar',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
+      theme: olusturTema(),
       routerConfig: router.config(),
     );
   }

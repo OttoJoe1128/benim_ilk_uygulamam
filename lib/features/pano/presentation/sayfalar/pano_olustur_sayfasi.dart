@@ -34,7 +34,7 @@ class _PanoOlusturSayfasiState extends ConsumerState<PanoOlusturSayfasi> {
           children: <Widget>[
             TextField(
               controller: baslikKontrol,
-              decoration: const InputDecoration(labelText: 'Başlık'),
+              decoration: const InputDecoration(labelText: 'Başlık', prefixIcon: Icon(Icons.dashboard_outlined)),
             ),
             const SizedBox(height: 12),
             DropdownButton<SureSecenegi>(

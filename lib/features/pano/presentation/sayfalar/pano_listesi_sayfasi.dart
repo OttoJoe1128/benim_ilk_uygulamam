@@ -7,6 +7,7 @@ import '../denetleyiciler/pano_denetleyici.dart';
 import '../../../../core/di/servis_bulucu.dart';
 import '../../../domain/sozlesmeler/pano_deposu.dart';
 import '../durum/pano_durumu.dart';
+import '../bilesenler/bos_durum.dart';
 
 @RoutePage()
 class PanoListesiSayfasi extends ConsumerStatefulWidget {
@@ -38,17 +39,28 @@ class _PanoListesiSayfasiState extends ConsumerState<PanoListesiSayfasi> {
       body: switch (durum) {
         _Yukleniyor() => const Center(child: CircularProgressIndicator()),
         _Basarisiz(:final String mesaj) => Center(child: Text(mesaj)),
-        _Basarili(:final List<Pano> panolar) => ListView.builder(
-            itemCount: panolar.length,
-            itemBuilder: (BuildContext context, int index) {
-              final Pano p = panolar[index];
-              return ListTile(
-                title: Text(p.baslik),
-                subtitle: Text('Bitiş: ${p.bitis}'),
-                onTap: () => context.router.pushNamed('/pano/${p.id}'),
-              );
-            },
-          ),
+        _Basarili(:final List<Pano> panolar) => panolar.isEmpty
+            ? BosDurum(
+                mesaj: 'Hiç pano yok. Hemen bir tane oluştur!\nSüre: 1 saat / 1 gün / 1 hafta',
+                onPressed: () async {
+                  await context.router.pushNamed('/olustur');
+                  if (!mounted) return;
+                  await ref.read(panoDenetleyiciProvider.notifier).getirPanolari();
+                },
+              )
+            : ListView.separated(
+                itemCount: panolar.length,
+                separatorBuilder: (_, __) => const Divider(height: 1),
+                itemBuilder: (BuildContext context, int index) {
+                  final Pano p = panolar[index];
+                  return ListTile(
+                    title: Text(p.baslik),
+                    subtitle: Text('Bitiş: ${p.bitis}'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.router.pushNamed('/pano/${p.id}'),
+                  );
+                },
+              ),
       },
     );
   }
