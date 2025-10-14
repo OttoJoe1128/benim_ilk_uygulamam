@@ -33,10 +33,23 @@ class SohbetDeposuFirestore implements SohbetDeposu {
 
   @override
   Future<MesajCikti> ekleMesaj(MesajGirdi girdi) async {
+    // Pano bitişini al ve mesaj için TTL alanı olarak yaz
+    final DocumentSnapshot<Map<String, dynamic>> pano =
+        await firestore.collection('panolar').doc(girdi.panoId).get();
+    if (!pano.exists) {
+      throw Exception('Pano bulunamadı');
+    }
+    final Map<String, dynamic>? panoVeri = pano.data();
+    final Timestamp? panoBitis = panoVeri?['bitis'] as Timestamp?;
+    if (panoBitis == null || panoBitis.toDate().isBefore(DateTime.now())) {
+      throw Exception('Pano süresi dolmuş');
+    }
     final String yeniId = uuidUretici.v4();
+    final DateTime simdi = DateTime.now();
     final Map<String, dynamic> veri = <String, dynamic>{
       'icerik': girdi.icerik,
-      'zaman': Timestamp.fromDate(DateTime.now()),
+      'zaman': Timestamp.fromDate(simdi),
+      'bitis': panoBitis, // TTL için gerekli alan
     };
     await firestore
         .collection('panolar')
@@ -44,7 +57,7 @@ class SohbetDeposuFirestore implements SohbetDeposu {
         .collection('mesajlar')
         .doc(yeniId)
         .set(veri);
-    return MesajCikti(id: yeniId, panoId: girdi.panoId, icerik: girdi.icerik, zaman: DateTime.now());
+    return MesajCikti(id: yeniId, panoId: girdi.panoId, icerik: girdi.icerik, zaman: simdi);
   }
 
   @override

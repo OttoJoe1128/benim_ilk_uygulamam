@@ -1,0 +1,24 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /panolar/{panoId} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && request.resource.data.baslik is string
+        && request.resource.data.baslik.size() > 0
+        && request.resource.data.olusturulma is timestamp
+        && request.resource.data.bitis is timestamp
+        && request.resource.data.bitis > request.time;
+      allow update, delete: if false;
+
+      match /mesajlar/{mesajId} {
+        allow read: if true;
+        allow create: if request.auth != null
+          && request.resource.data.icerik is string
+          && request.resource.data.zaman is timestamp
+          && request.resource.data.bitis is timestamp; // TTL alanı
+        allow update, delete: if false;
+      }
+    }
+  }
+}
