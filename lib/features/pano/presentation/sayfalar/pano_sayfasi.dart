@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/di/servis_bulucu.dart';
+import '../../../../core/utils/baglanti_olusturucu.dart';
 import '../../../sohbet/domain/sozlesmeler/sohbet_deposu.dart';
 import '../../../sohbet/domain/varliklar/mesaj.dart';
 import '../../../sohbet/presentation/denetleyiciler/sohbet_denetleyici.dart';
@@ -36,7 +37,27 @@ class _PanoSayfasiState extends ConsumerState<PanoSayfasi> {
   Widget build(BuildContext context) {
     final SohbetDurumu durum = ref.watch(_providerFor(panoId));
     return Scaffold(
-      appBar: AppBar(title: const Text('Pano')),
+      appBar: AppBar(
+        title: const Text('Pano'),
+        actions: <Widget>[
+          IconButton(
+            icon: const Icon(Icons.share),
+            onPressed: () async {
+              final String url = olusturPanoBaglantisi(panoId: panoId, saltOkunur: true);
+              await showDialog<void>(
+                context: context,
+                builder: (BuildContext ctx) => AlertDialog(
+                  title: const Text('Paylaşım bağlantısı'),
+                  content: SelectableText(url),
+                  actions: <Widget>[
+                    TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Kapat')),
+                  ],
+                ),
+              );
+            },
+          )
+        ],
+      ),
       body: Column(
         children: <Widget>[
           Expanded(

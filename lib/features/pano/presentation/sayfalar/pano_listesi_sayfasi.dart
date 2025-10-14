@@ -9,6 +9,7 @@ import '../../../domain/sozlesmeler/pano_deposu.dart';
 import '../durum/pano_durumu.dart';
 import '../bilesenler/bos_durum.dart';
 import '../../../../core/utils/zaman_formatlayici.dart';
+import '../../../../core/utils/baglanti_olusturucu.dart';
 
 @RoutePage()
 class PanoListesiSayfasi extends ConsumerStatefulWidget {
@@ -58,7 +59,28 @@ class _PanoListesiSayfasiState extends ConsumerState<PanoListesiSayfasi> {
                   return ListTile(
                     title: Text(p.baslik),
                     subtitle: Text('Kalan: $kalan'),
-                    trailing: const Icon(Icons.chevron_right),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        IconButton(
+                          icon: const Icon(Icons.share),
+                          onPressed: () async {
+                            final String url = olusturPanoBaglantisi(panoId: p.id, saltOkunur: true);
+                            await showDialog<void>(
+                              context: context,
+                              builder: (BuildContext ctx) => AlertDialog(
+                                title: const Text('Paylaşım bağlantısı'),
+                                content: SelectableText(url),
+                                actions: <Widget>[
+                                  TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Kapat')),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                        const Icon(Icons.chevron_right),
+                      ],
+                    ),
                     onTap: () => context.router.pushNamed('/pano/${p.id}'),
                   );
                 },
