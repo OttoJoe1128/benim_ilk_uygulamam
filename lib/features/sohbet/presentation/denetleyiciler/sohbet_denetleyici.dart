@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/sozlesmeler/sohbet_deposu.dart';
 import '../../domain/varliklar/mesaj.dart';
 import '../durum/sohbet_durumu.dart';
+import '../../../../core/utils/icerik_filtresi.dart';
 
 class SohbetDenetleyici extends StateNotifier<SohbetDurumu> {
   final SohbetDeposu sohbetDeposu;
@@ -24,7 +25,12 @@ class SohbetDenetleyici extends StateNotifier<SohbetDurumu> {
 
   Future<void> gonderMesaj(String icerik) async {
     try {
-      await sohbetDeposu.ekleMesaj(MesajGirdi(panoId: panoId, icerik: icerik));
+      if (IcerikFiltresi.hasUygunsuz(icerik)) {
+        final String temiz = IcerikFiltresi.temizle(icerik);
+        await sohbetDeposu.ekleMesaj(MesajGirdi(panoId: panoId, icerik: temiz));
+      } else {
+        await sohbetDeposu.ekleMesaj(MesajGirdi(panoId: panoId, icerik: icerik));
+      }
       await getirMesajlari();
     } catch (e) {
       state = SohbetDurumu.basarisiz(e.toString());
