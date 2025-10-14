@@ -1,0 +1,51 @@
+name: Flutter CI
+
+on:
+  push:
+    branches: [ main, "cursor/**" ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Kod deposunu al
+        uses: actions/checkout@v4
+
+      - name: Java'yı kur (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Flutter'ı kur
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Bağımlılıkları indir
+        run: flutter pub get
+
+      - name: Format kontrolü
+        run: flutter format --set-exit-if-changed .
+
+      - name: Analiz
+        run: flutter analyze --no-fatal-warnings
+
+      - name: Testleri çalıştır
+        run: flutter test --no-pub --coverage
+
+      - name: Kod kapsamı raporu (özet)
+        if: always()
+        run: |
+          LINE=$(grep -n "^SF:" -n coverage/lcov.info | wc -l || true)
+          echo "Kapsam dosyası var mı: $LINE satır"
+
+      - name: Android derlemesini doğrula (isteğe bağlı)
+        if: github.event_name == 'push'
+        run: |
+          flutter build apk --debug
