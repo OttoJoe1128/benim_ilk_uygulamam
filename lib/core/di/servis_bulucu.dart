@@ -3,6 +3,7 @@ import 'package:uuid/uuid.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:benim_ilk_uygulamam/firebase_options.dart';
 
 import '../../features/pano/data/depolar/pano_deposu_bellek.dart';
 import '../../features/pano/data/depolar/pano_deposu_firestore.dart';
@@ -28,7 +29,11 @@ void baslatServisBulucu() {
 Future<void> etkinlestirFirebaseServisleri({bool zorunlu = false}) async {
   try {
     if (Firebase.apps.isEmpty) {
-      await Firebase.initializeApp();
+      try {
+        await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+      } catch (_) {
+        await Firebase.initializeApp();
+      }
     }
     await FirebaseAuth.instance.signInAnonymously();
     if (!servisBulucu.isRegistered<FirebaseFirestore>()) {
