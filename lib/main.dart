@@ -6,6 +6,8 @@ import 'core/routing/app_router.dart';
 
 void main() {
   baslatServisBulucu();
+  // Firebase'i arka planda dene, başarısız olursa bellek depolarıyla devam
+  etkinlestirFirebaseServisleri();
   runApp(const ProviderScope(child: MyApp()));
 }
 
