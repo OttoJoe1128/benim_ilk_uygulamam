@@ -1,0 +1,25 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "arsaNo": "100",
+        "adaNo": "20",
+        "parselNo": "5"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [32.8535, 39.9202],
+            [32.8559, 39.9202],
+            [32.8559, 39.9218],
+            [32.8535, 39.9218],
+            [32.8535, 39.9202]
+          ]
+        ]
+      }
+    }
+  ]
+}
