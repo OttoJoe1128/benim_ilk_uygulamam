@@ -5,6 +5,8 @@ import 'package:latlong2/latlong.dart';
 
 import 'package:benim_ilk_uygulamam/core/sabitler/harita_sabitleri.dart';
 import 'package:benim_ilk_uygulamam/features/harita/denetleyiciler/harita_denetleyici.dart';
+import 'package:benim_ilk_uygulamam/features/harita/depocular/geojson_parsel_konum_deposu.dart';
+import 'package:benim_ilk_uygulamam/features/harita/veri_kaynaklari/geojson_parsel_kaynagi.dart';
 import 'package:benim_ilk_uygulamam/features/harita/denetleyiciler/harita_durumu.dart';
 import 'package:benim_ilk_uygulamam/features/harita/sunuma/ciftlik_tasarim_paneli.dart';
 
@@ -13,7 +15,16 @@ class HaritaEkraniKapsayici extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const ProviderScope(child: HaritaSayfasi());
+    final GeojsonParselKaynagi kaynagi = GeojsonParselKaynagi(
+      assetYolu: 'assets/geo/parseller.geojson',
+    );
+    final GeojsonParselKonumDeposu depo = GeojsonParselKonumDeposu(kaynagi: kaynagi);
+    return ProviderScope(
+      overrides: <Override>[
+        haritaDenetleyiciProvider.overrideWith((Ref ref) => HaritaDenetleyici(parselKonumDeposu: depo)),
+      ],
+      child: const HaritaSayfasi(),
+    );
   }
 }
 
