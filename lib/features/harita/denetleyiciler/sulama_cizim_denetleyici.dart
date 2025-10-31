@@ -1,10 +1,22 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 
+import 'package:benim_ilk_uygulamam/core/di/hizmet_bulucu.dart';
 import 'package:benim_ilk_uygulamam/features/harita/denetleyiciler/sulama_cizim_durumu.dart';
+import 'package:benim_ilk_uygulamam/features/harita/depocular/sulama_cizim_deposu.dart';
 
 class SulamaCizimDenetleyici extends StateNotifier<SulamaCizimDurumu> {
-  SulamaCizimDenetleyici() : super(SulamaCizimDurumu.ilk());
+  final SulamaCizimDeposu sulamaCizimDeposu;
+
+  SulamaCizimDenetleyici({required this.sulamaCizimDeposu})
+    : super(SulamaCizimDurumu.ilk());
+
+  Future<void> yukleNoktalar() async {
+    final List<LatLng> kayitli = await sulamaCizimDeposu.getirNoktalar();
+    state = state.kopyala(noktalar: kayitli);
+  }
 
   void baslatCizim() {
     if (state.isCizimAcik) {
@@ -20,6 +32,7 @@ class SulamaCizimDenetleyici extends StateNotifier<SulamaCizimDurumu> {
     }
     final List<LatLng> guncel = List<LatLng>.from(state.noktalar)..add(nokta);
     state = state.kopyala(noktalar: guncel);
+    unawaited(sulamaCizimDeposu.kaydetNoktalar(noktalar: guncel));
   }
 
   void geriAl() {
@@ -28,15 +41,18 @@ class SulamaCizimDenetleyici extends StateNotifier<SulamaCizimDurumu> {
     }
     final List<LatLng> guncel = List<LatLng>.from(state.noktalar)..removeLast();
     state = state.kopyala(noktalar: guncel);
+    unawaited(sulamaCizimDeposu.kaydetNoktalar(noktalar: guncel));
   }
 
   void temizle() {
     state = state.kopyala(noktalar: <LatLng>[]);
+    unawaited(sulamaCizimDeposu.kaydetNoktalar(noktalar: <LatLng>[]));
   }
 }
 
 final StateNotifierProvider<SulamaCizimDenetleyici, SulamaCizimDurumu>
 sulamaCizimDenetleyiciProvider =
     StateNotifierProvider<SulamaCizimDenetleyici, SulamaCizimDurumu>((Ref ref) {
-      return SulamaCizimDenetleyici();
+      final SulamaCizimDeposu depo = hizmetBulucu<SulamaCizimDeposu>();
+      return SulamaCizimDenetleyici(sulamaCizimDeposu: depo);
     });

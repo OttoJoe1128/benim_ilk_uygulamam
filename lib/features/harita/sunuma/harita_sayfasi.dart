@@ -101,6 +101,9 @@ class _HaritaSayfasiState extends ConsumerState<HaritaSayfasi> {
         return;
       }
       unawaited(ref.read(sensorDenetleyiciProvider.notifier).yukleSensorler());
+      unawaited(
+        ref.read(sulamaCizimDenetleyiciProvider.notifier).yukleNoktalar(),
+      );
     });
   }
 

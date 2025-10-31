@@ -1,8 +1,11 @@
 import 'package:benim_ilk_uygulamam/core/di/hizmet_bulucu.dart';
+import 'package:benim_ilk_uygulamam/core/veritabani/veritabani_yonetici.dart';
 import 'package:benim_ilk_uygulamam/features/harita/depocular/geojson_parsel_konum_deposu.dart';
 import 'package:benim_ilk_uygulamam/features/harita/depocular/parsel_konum_deposu.dart';
-import 'package:benim_ilk_uygulamam/features/harita/depocular/sensor_bellek_deposu.dart';
 import 'package:benim_ilk_uygulamam/features/harita/depocular/sensor_deposu.dart';
+import 'package:benim_ilk_uygulamam/features/harita/depocular/sensor_sqlite_deposu.dart';
+import 'package:benim_ilk_uygulamam/features/harita/depocular/sulama_cizim_deposu.dart';
+import 'package:benim_ilk_uygulamam/features/harita/depocular/sulama_cizim_sqlite_deposu.dart';
 import 'package:benim_ilk_uygulamam/features/harita/denetleyiciler/konum_denetleyici.dart';
 import 'package:benim_ilk_uygulamam/features/harita/hizmetler/konum_hizmeti.dart';
 import 'package:benim_ilk_uygulamam/features/harita/veri_kaynaklari/geojson_parsel_kaynagi.dart';
@@ -22,5 +25,17 @@ void kurHaritaModulu() {
   hizmetBulucu.registerFactory<KonumDenetleyici>(
     () => KonumDenetleyici(konumHizmeti: hizmetBulucu<KonumHizmeti>()),
   );
-  hizmetBulucu.registerLazySingleton<SensorDeposu>(SensorBellekDeposu.new);
+  hizmetBulucu.registerLazySingleton<VeritabaniYoneticisi>(
+    VeritabaniYoneticisi.new,
+  );
+  hizmetBulucu.registerLazySingleton<SensorDeposu>(
+    () => SensorSqliteDeposu(
+      veritabaniYoneticisi: hizmetBulucu<VeritabaniYoneticisi>(),
+    ),
+  );
+  hizmetBulucu.registerLazySingleton<SulamaCizimDeposu>(
+    () => SulamaCizimSqliteDeposu(
+      veritabaniYoneticisi: hizmetBulucu<VeritabaniYoneticisi>(),
+    ),
+  );
 }
