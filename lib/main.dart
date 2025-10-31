@@ -1,39 +1,32 @@
 import 'package:flutter/material.dart';
-import 'package:benim_ilk_uygulamam/features/harita/sunuma/harita_sayfasi.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:benim_ilk_uygulamam/core/di/hizmet_bulucu.dart';
+import 'package:benim_ilk_uygulamam/core/tema/uygulama_tema.dart';
+import 'package:benim_ilk_uygulamam/core/yerellestirme/uygulama_dilleri.dart';
+import 'package:benim_ilk_uygulamam/core/yonlendirme/uygulama_router.dart';
 
 void main() {
-  runApp(const MyApp());
+  WidgetsFlutterBinding.ensureInitialized();
+  kurHizmetBulucu(moduller: <ModulKaydedici>[]);
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
+  static final UygulamaRouter _router = UygulamaRouter();
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'Nova Agro',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const HaritaEkraniKapsayici(),
+      theme: UygulamaTema.hazirlaAydinlikTema(),
+      darkTheme: UygulamaTema.hazirlaKoyuTema(),
+      routerConfig: _router.config(),
+      locale: UygulamaDilleri.varsayilanYerel,
+      supportedLocales: UygulamaDilleri.desteklenenYerelleriGetir(),
+      localizationsDelegates: UygulamaDilleri.yerellestirmeDelegeleriniGetir(),
     );
   }
 }
-
-// Sayaç örneği kaldırıldı; uygulama harita ekranı ile başlar.
