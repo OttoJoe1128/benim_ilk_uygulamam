@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 
+import 'package:benim_ilk_uygulamam/core/di/hizmet_bulucu.dart';
 import 'package:benim_ilk_uygulamam/features/harita/denetleyiciler/harita_durumu.dart';
 import 'package:benim_ilk_uygulamam/features/harita/depocular/parsel_konum_deposu.dart';
 import 'package:benim_ilk_uygulamam/features/harita/varliklar/parsel.dart';
@@ -56,43 +57,6 @@ class HaritaDenetleyici extends StateNotifier<HaritaDurumu> {
 
 final StateNotifierProvider<HaritaDenetleyici, HaritaDurumu> haritaDenetleyiciProvider =
     StateNotifierProvider<HaritaDenetleyici, HaritaDurumu>((Ref ref) {
-  // Varsayılan olarak mock depo kullanılır; DI katmanına taşınabilir.
-  // ignore: avoid_redundant_argument_values
-  return HaritaDenetleyici(parselKonumDeposu: const _VarsayilanDepo());
+  final ParselKonumDeposu depo = hizmetBulucu<ParselKonumDeposu>();
+  return HaritaDenetleyici(parselKonumDeposu: depo);
 });
-
-/// Basit bir köprü: provider içinde mock bağımlılık
-class _VarsayilanDepo implements ParselKonumDeposu {
-  const _VarsayilanDepo();
-  @override
-  Future<Parsel?> getirParselKonumu({
-    required String arsaNo,
-    required String adaNo,
-    required String parselNo,
-  }) async {
-    // Bu sınıf doğrudan mock sınıfını kullanmak yerine, derleme zamanı
-    // bağımlılığını azaltmak için küçük bir re-implementasyon içerir.
-    // Geliştirmede get_it/DI ile gerçek sınıf bağlanmalıdır.
-    final String birlesik = '$arsaNo-$adaNo-$parselNo';
-    int toplam = 0;
-    for (int i = 0; i < birlesik.length; i++) {
-      toplam += birlesik.codeUnitAt(i) * (i + 1);
-    }
-    final double enlem = 36.0 + (toplam % 1000) / 1000.0 * 6.0;
-    final double boylam = 26.0 + (toplam % 1000) / 1000.0 * 10.0;
-    const double ofsetE = 0.0018;
-    const double ofsetB = 0.0022;
-    final List<LatLng> poligon = <LatLng>[
-      LatLng(enlem - ofsetE, boylam - ofsetB),
-      LatLng(enlem - ofsetE, boylam + ofsetB),
-      LatLng(enlem + ofsetE, boylam + ofsetB),
-      LatLng(enlem + ofsetE, boylam - ofsetB),
-    ];
-    return Parsel(
-      arsaNo: arsaNo,
-      adaNo: adaNo,
-      parselNo: parselNo,
-      sinirNoktalari: poligon,
-    );
-  }
-}
