@@ -47,6 +47,9 @@ dependencies:
   # Durum yönetimi
   flutter_riverpod: ^2.5.1
 
+  # Araçlar
+  uuid: ^4.5.1
+
   # Bağımlılık enjeksiyonu
   get_it: ^7.7.0
 

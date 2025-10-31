@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -9,7 +11,14 @@ import 'package:benim_ilk_uygulamam/features/harita/denetleyiciler/harita_denetl
 import 'package:benim_ilk_uygulamam/features/harita/denetleyiciler/harita_durumu.dart';
 import 'package:benim_ilk_uygulamam/features/harita/denetleyiciler/konum_denetleyici.dart';
 import 'package:benim_ilk_uygulamam/features/harita/denetleyiciler/konum_durumu.dart';
+import 'package:benim_ilk_uygulamam/features/harita/denetleyiciler/sensor_denetleyici.dart';
+import 'package:benim_ilk_uygulamam/features/harita/denetleyiciler/sensor_durumu.dart';
+import 'package:benim_ilk_uygulamam/features/harita/denetleyiciler/sulama_cizim_denetleyici.dart';
+import 'package:benim_ilk_uygulamam/features/harita/denetleyiciler/sulama_cizim_durumu.dart';
+import 'package:benim_ilk_uygulamam/features/harita/denetleyiciler/tasarim_modu.dart';
+import 'package:benim_ilk_uygulamam/features/harita/denetleyiciler/tasarim_modu_provider.dart';
 import 'package:benim_ilk_uygulamam/features/harita/sunuma/ciftlik_tasarim_paneli.dart';
+import 'package:benim_ilk_uygulamam/features/harita/varliklar/sensor.dart';
 
 @RoutePage(name: 'HaritaRoute')
 class HaritaEkraniKapsayici extends StatelessWidget {
@@ -33,11 +42,13 @@ class _HaritaSayfasiState extends ConsumerState<HaritaSayfasi> {
   final TextEditingController adaDenetleyici = TextEditingController();
   final TextEditingController parselDenetleyici = TextEditingController();
   final MapController haritaDenetleyici = MapController();
+  ProviderSubscription<KonumDurumu>? konumAboneligi;
+  ProviderSubscription<SensorDurumu>? sensorAboneligi;
 
   @override
   void initState() {
     super.initState();
-    ref.listenManual<KonumDurumu>(konumDenetleyiciProvider, (
+    konumAboneligi = ref.listenManual<KonumDurumu>(konumDenetleyiciProvider, (
       KonumDurumu? onceki,
       KonumDurumu yeni,
     ) {
@@ -69,6 +80,28 @@ class _HaritaSayfasiState extends ConsumerState<HaritaSayfasi> {
         });
       }
     });
+    sensorAboneligi = ref.listenManual<SensorDurumu>(
+      sensorDenetleyiciProvider,
+      (SensorDurumu? onceki, SensorDurumu yeni) {
+        if (!mounted) {
+          return;
+        }
+        final String? mesaj = yeni.hataMesaji;
+        final bool mesajDegisti =
+            mesaj != null && mesaj.isNotEmpty && mesaj != onceki?.hataMesaji;
+        if (mesajDegisti) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(mesaj)));
+        }
+      },
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      unawaited(ref.read(sensorDenetleyiciProvider.notifier).yukleSensorler());
+    });
   }
 
   @override
@@ -76,6 +109,8 @@ class _HaritaSayfasiState extends ConsumerState<HaritaSayfasi> {
     arsaDenetleyici.dispose();
     adaDenetleyici.dispose();
     parselDenetleyici.dispose();
+    konumAboneligi?.close();
+    sensorAboneligi?.close();
     super.dispose();
   }
 
@@ -83,6 +118,11 @@ class _HaritaSayfasiState extends ConsumerState<HaritaSayfasi> {
   Widget build(BuildContext context) {
     final HaritaDurumu durum = ref.watch(haritaDenetleyiciProvider);
     final KonumDurumu konumDurumu = ref.watch(konumDenetleyiciProvider);
+    final TasarimModu tasarimModu = ref.watch(tasarimModuProvider);
+    final SulamaCizimDurumu sulamaDurumu = ref.watch(
+      sulamaCizimDenetleyiciProvider,
+    );
+    final SensorDurumu sensorDurumu = ref.watch(sensorDenetleyiciProvider);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (durum is BasariliDurumu) {
@@ -99,6 +139,9 @@ class _HaritaSayfasiState extends ConsumerState<HaritaSayfasi> {
     final LatLng? kullaniciKonumu = konumDurumu is KonumBasariliDurumu
         ? konumDurumu.kullaniciKonumu
         : null;
+    final bool sulamaCizimiVar = sulamaDurumu.noktalar.length >= 2;
+    final List<Sensor> sensorler = sensorDurumu.sensorler;
+    final bool tasarimIsaretcisiGoster = tasarimModu != TasarimModu.hicbiri;
     return Scaffold(
       appBar: AppBar(title: const Text('Nova Agro – Harita')),
       body: Column(
@@ -172,18 +215,7 @@ class _HaritaSayfasiState extends ConsumerState<HaritaSayfasi> {
                     ),
                     initialZoom: HaritaSabitleri.VARSAYILAN_YAKINLASMA,
                     onTap: (TapPosition _, LatLng nokta) {
-                      final HaritaDenetleyici not = ref.read(
-                        haritaDenetleyiciProvider.notifier,
-                      );
-                      if (durum is BasariliDurumu) {
-                        final bool icinde = not.isNoktaPoligonIcinde(
-                          nokta: nokta,
-                          poligon: durum.seciliParsel.sinirNoktalari,
-                        );
-                        if (icinde) {
-                          _gosterTasarimPaneli(context, durum);
-                        }
-                      }
+                      unawaited(_isleHaritaTiklama(nokta: nokta));
                     },
                   ),
                   children: <Widget>[
@@ -230,8 +262,59 @@ class _HaritaSayfasiState extends ConsumerState<HaritaSayfasi> {
                           ),
                         ],
                       ),
+                    if (sulamaCizimiVar)
+                      PolylineLayer(
+                        polylines: <Polyline>[
+                          Polyline(
+                            points: sulamaDurumu.noktalar,
+                            strokeWidth: 4,
+                            color: Colors.teal.shade600,
+                          ),
+                        ],
+                      ),
+                    if (sensorler.isNotEmpty)
+                      MarkerLayer(
+                        markers: sensorler
+                            .map(
+                              (Sensor sensor) => Marker(
+                                point: sensor.konum,
+                                width: 48,
+                                height: 48,
+                                child: Tooltip(
+                                  message: sensor.ad,
+                                  child: const Icon(
+                                    Icons.sensors,
+                                    color: Colors.deepOrange,
+                                    size: 28,
+                                  ),
+                                ),
+                              ),
+                            )
+                            .toList(),
+                      ),
                   ],
                 ),
+                if (tasarimIsaretcisiGoster)
+                  Positioned(
+                    top: 16,
+                    right: 16,
+                    child: Chip(
+                      avatar: Icon(
+                        tasarimModu == TasarimModu.sulamaCizimi
+                            ? Icons.timeline
+                            : Icons.sensors,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                      label: Text(
+                        tasarimModu == TasarimModu.sulamaCizimi
+                            ? 'Sulama çizimi aktif (${sulamaDurumu.noktalar.length})'
+                            : 'Sensör ekleme modu',
+                      ),
+                      backgroundColor: Colors.teal.shade600,
+                      labelStyle: const TextStyle(color: Colors.white),
+                    ),
+                  ),
                 Positioned(
                   right: 16,
                   bottom: 16,
@@ -256,7 +339,9 @@ class _HaritaSayfasiState extends ConsumerState<HaritaSayfasi> {
               ],
             ),
           ),
-          if (durum is YukleniyorDurumu || konumIslemde)
+          if (durum is YukleniyorDurumu ||
+              konumIslemde ||
+              sensorDurumu.isYukleniyor)
             const LinearProgressIndicator(minHeight: 2),
         ],
       ),
@@ -274,5 +359,72 @@ class _HaritaSayfasiState extends ConsumerState<HaritaSayfasi> {
         return CiftlikTasarimPaneli(baslik: baslik);
       },
     );
+  }
+
+  Future<void> _isleHaritaTiklama({required LatLng nokta}) async {
+    final TasarimModu aktifMod = ref.read(tasarimModuProvider);
+    if (aktifMod == TasarimModu.sulamaCizimi) {
+      ref.read(sulamaCizimDenetleyiciProvider.notifier).ekleNokta(nokta: nokta);
+      return;
+    }
+    if (aktifMod == TasarimModu.sensorEkle) {
+      await _gosterSensorEklemeFormu(konum: nokta);
+      return;
+    }
+    final HaritaDurumu mevcutDurum = ref.read(haritaDenetleyiciProvider);
+    if (mevcutDurum is BasariliDurumu) {
+      final HaritaDenetleyici denetleyici = ref.read(
+        haritaDenetleyiciProvider.notifier,
+      );
+      final bool icinde = denetleyici.isNoktaPoligonIcinde(
+        nokta: nokta,
+        poligon: mevcutDurum.seciliParsel.sinirNoktalari,
+      );
+      if (icinde) {
+        _gosterTasarimPaneli(context, mevcutDurum);
+      }
+    }
+  }
+
+  Future<void> _gosterSensorEklemeFormu({required LatLng konum}) async {
+    final TextEditingController adDenetleyici = TextEditingController();
+    try {
+      final bool? sonuc = await showDialog<bool>(
+        context: context,
+        builder: (BuildContext ctx) {
+          return AlertDialog(
+            title: const Text('Sensör Ekle'),
+            content: TextField(
+              controller: adDenetleyici,
+              decoration: const InputDecoration(labelText: 'Sensör Adı'),
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: const Text('Vazgeç'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(ctx).pop(true),
+                child: const Text('Ekle'),
+              ),
+            ],
+          );
+        },
+      );
+      if (sonuc != true) {
+        return;
+      }
+      await ref
+          .read(sensorDenetleyiciProvider.notifier)
+          .ekleSensor(ad: adDenetleyici.text, konum: konum);
+      final SensorDurumu guncelDurum = ref.read(sensorDenetleyiciProvider);
+      if (guncelDurum.hataMesaji == null && mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Sensör eklendi')));
+      }
+    } finally {
+      adDenetleyici.dispose();
+    }
   }
 }
