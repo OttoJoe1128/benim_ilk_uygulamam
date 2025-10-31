@@ -39,6 +39,11 @@ dependencies:
   flutter_map: ^7.0.0
   latlong2: ^0.9.0
 
+  # Konum ve izinler
+  geolocator: ^13.0.1
+  geocoding: ^3.0.0
+  permission_handler: ^11.3.1
+
   # Durum yönetimi
   flutter_riverpod: ^2.5.1
 

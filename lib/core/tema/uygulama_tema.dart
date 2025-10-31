@@ -7,29 +7,47 @@ class UygulamaTema {
   static const Color _yardimciKrem = Color(0xFFF1F3E8);
 
   static ThemeData hazirlaAydinlikTema() {
-    final ColorScheme renkPaleti = ColorScheme.fromSeed(seedColor: _anaYesil, brightness: Brightness.light);
+    final ColorScheme renkPaleti = ColorScheme.fromSeed(
+      seedColor: _anaYesil,
+      brightness: Brightness.light,
+    );
     return ThemeData(
       colorScheme: renkPaleti,
       scaffoldBackgroundColor: _yardimciKrem,
       useMaterial3: true,
       textTheme: ThemeData.light().textTheme.apply(fontFamily: 'Roboto'),
-      appBarTheme: AppBarTheme(backgroundColor: renkPaleti.primary, foregroundColor: renkPaleti.onPrimary),
+      appBarTheme: AppBarTheme(
+        backgroundColor: renkPaleti.primary,
+        foregroundColor: renkPaleti.onPrimary,
+      ),
       filledButtonTheme: FilledButtonThemeData(
-        style: FilledButton.styleFrom(backgroundColor: renkPaleti.primary, foregroundColor: renkPaleti.onPrimary),
+        style: FilledButton.styleFrom(
+          backgroundColor: renkPaleti.primary,
+          foregroundColor: renkPaleti.onPrimary,
+        ),
       ),
     );
   }
 
   static ThemeData hazirlaKoyuTema() {
-    final ColorScheme renkPaleti = ColorScheme.fromSeed(seedColor: _anaYesil, brightness: Brightness.dark);
+    final ColorScheme renkPaleti = ColorScheme.fromSeed(
+      seedColor: _anaYesil,
+      brightness: Brightness.dark,
+    );
     return ThemeData(
       colorScheme: renkPaleti,
       scaffoldBackgroundColor: Colors.black,
       useMaterial3: true,
       textTheme: ThemeData.dark().textTheme.apply(fontFamily: 'Roboto'),
-      appBarTheme: AppBarTheme(backgroundColor: renkPaleti.surfaceVariant, foregroundColor: renkPaleti.onSurface),
+      appBarTheme: AppBarTheme(
+        backgroundColor: renkPaleti.surfaceContainerHighest,
+        foregroundColor: renkPaleti.onSurface,
+      ),
       filledButtonTheme: FilledButtonThemeData(
-        style: FilledButton.styleFrom(backgroundColor: renkPaleti.primary, foregroundColor: renkPaleti.onPrimary),
+        style: FilledButton.styleFrom(
+          backgroundColor: renkPaleti.primary,
+          foregroundColor: renkPaleti.onPrimary,
+        ),
       ),
     );
   }

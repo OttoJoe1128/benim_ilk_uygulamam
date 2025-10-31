@@ -12,8 +12,11 @@ class GeojsonParselKonumDeposu implements ParselKonumDeposu {
     required String adaNo,
     required String parselNo,
   }) async {
-    final GeojsonParselKayit? kayit =
-        await kaynagi.bul(arsaNo: arsaNo, adaNo: adaNo, parselNo: parselNo);
+    final GeojsonParselKayit? kayit = await kaynagi.bul(
+      arsaNo: arsaNo,
+      adaNo: adaNo,
+      parselNo: parselNo,
+    );
     if (kayit == null) return null;
     return Parsel(
       arsaNo: kayit.arsaNo,

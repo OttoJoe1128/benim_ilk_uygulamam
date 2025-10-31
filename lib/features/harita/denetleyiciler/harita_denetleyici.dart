@@ -9,7 +9,8 @@ import 'package:benim_ilk_uygulamam/features/harita/varliklar/parsel.dart';
 class HaritaDenetleyici extends StateNotifier<HaritaDurumu> {
   final ParselKonumDeposu parselKonumDeposu;
 
-  HaritaDenetleyici({required this.parselKonumDeposu}) : super(const IlkDurum());
+  HaritaDenetleyici({required this.parselKonumDeposu})
+    : super(const IlkDurum());
 
   Future<void> araVeSec({
     required String arsaNo,
@@ -37,7 +38,10 @@ class HaritaDenetleyici extends StateNotifier<HaritaDurumu> {
     }
   }
 
-  bool isNoktaPoligonIcinde({required LatLng nokta, required List<LatLng> poligon}) {
+  bool isNoktaPoligonIcinde({
+    required LatLng nokta,
+    required List<LatLng> poligon,
+  }) {
     // Ray casting algoritması
     bool icinde = false;
     for (int i = 0, j = poligon.length - 1; i < poligon.length; j = i++) {
@@ -45,8 +49,10 @@ class HaritaDenetleyici extends StateNotifier<HaritaDurumu> {
       final double yi = poligon[i].latitude;
       final double xj = poligon[j].longitude;
       final double yj = poligon[j].latitude;
-      final bool kesisir = ((yi > nokta.latitude) != (yj > nokta.latitude)) &&
-          (nokta.longitude < (xj - xi) * (nokta.latitude - yi) / (yj - yi + 0.0) + xi);
+      final bool kesisir =
+          ((yi > nokta.latitude) != (yj > nokta.latitude)) &&
+          (nokta.longitude <
+              (xj - xi) * (nokta.latitude - yi) / (yj - yi + 0.0) + xi);
       if (kesisir) {
         icinde = !icinde;
       }
@@ -55,8 +61,9 @@ class HaritaDenetleyici extends StateNotifier<HaritaDurumu> {
   }
 }
 
-final StateNotifierProvider<HaritaDenetleyici, HaritaDurumu> haritaDenetleyiciProvider =
+final StateNotifierProvider<HaritaDenetleyici, HaritaDurumu>
+haritaDenetleyiciProvider =
     StateNotifierProvider<HaritaDenetleyici, HaritaDurumu>((Ref ref) {
-  final ParselKonumDeposu depo = hizmetBulucu<ParselKonumDeposu>();
-  return HaritaDenetleyici(parselKonumDeposu: depo);
-});
+      final ParselKonumDeposu depo = hizmetBulucu<ParselKonumDeposu>();
+      return HaritaDenetleyici(parselKonumDeposu: depo);
+    });

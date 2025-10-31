@@ -13,10 +13,7 @@ class CiftlikTasarimPaneli extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text(
-              baslik,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
+            Text(baslik, style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 12),
             Wrap(
               spacing: 12,
@@ -34,10 +31,7 @@ class CiftlikTasarimPaneli extends StatelessWidget {
                   onPressed: () {},
                   child: const Text('Çit/Alan Çiz'),
                 ),
-                FilledButton(
-                  onPressed: () {},
-                  child: const Text('Kaydet'),
-                ),
+                FilledButton(onPressed: () {}, child: const Text('Kaydet')),
               ],
             ),
             const SizedBox(height: 16),

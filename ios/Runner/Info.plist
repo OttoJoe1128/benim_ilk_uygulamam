@@ -45,5 +45,11 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Konumunu haritada gösterebilmemiz için konum iznine ihtiyaç var.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Arka planda hassas konum verisi ile sulama alanlarını takip etmek için konum iznine ihtiyaç var.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Konum hizmetlerini arka planda kullanabilmek için iznin gerekiyor.</string>
 </dict>
 </plist>
