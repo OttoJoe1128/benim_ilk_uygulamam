@@ -5,14 +5,19 @@ import 'package:uuid/uuid.dart';
 import 'package:nova_agro/core/di/hizmet_bulucu.dart';
 import 'package:nova_agro/features/harita/denetleyiciler/sensor_durumu.dart';
 import 'package:nova_agro/features/harita/depocular/sensor_deposu.dart';
+import 'package:nova_agro/features/harita/senkronizasyon/senkron_yoneticisi.dart';
 import 'package:nova_agro/features/harita/varliklar/sensor.dart';
 
 class SensorDenetleyici extends StateNotifier<SensorDurumu> {
   final SensorDeposu sensorDeposu;
   final Uuid uuid;
+  final SenkronYoneticisi senkronYoneticisi;
 
-  SensorDenetleyici({required this.sensorDeposu, required this.uuid})
-    : super(SensorDurumu.ilk());
+  SensorDenetleyici({
+    required this.sensorDeposu,
+    required this.uuid,
+    required this.senkronYoneticisi,
+  }) : super(SensorDurumu.ilk());
 
   Future<void> yukleSensorler() async {
     state = state.kopyala(isYukleniyor: true, hataMesajiniTemizle: true);
@@ -23,6 +28,7 @@ class SensorDenetleyici extends StateNotifier<SensorDurumu> {
         isYukleniyor: false,
         hataMesajiniTemizle: true,
       );
+      await senkronYoneticisi.senkronizeBekleyenIslemler();
     } catch (e) {
       state = state.kopyala(
         isYukleniyor: false,
@@ -47,6 +53,7 @@ class SensorDenetleyici extends StateNotifier<SensorDurumu> {
       final List<Sensor> guncel = List<Sensor>.from(state.sensorler)
         ..add(sensor);
       state = state.kopyala(sensorler: guncel, hataMesajiniTemizle: true);
+      await senkronYoneticisi.senkronizeSensorEkle(sensor: sensor);
     } catch (e) {
       state = state.kopyala(hataMesaji: 'Sensör eklenemedi: ${e.toString()}');
     }
@@ -75,6 +82,7 @@ class SensorDenetleyici extends StateNotifier<SensorDurumu> {
         hataMesajiniTemizle: true,
         duzenlenenSensoruTemizle: true,
       );
+      await senkronYoneticisi.senkronizeSensorGuncelle(sensor: guncelSensor);
     } catch (e) {
       state = state.kopyala(
         hataMesaji: 'Sensör güncellenemedi: ${e.toString()}',
@@ -89,6 +97,7 @@ class SensorDenetleyici extends StateNotifier<SensorDurumu> {
           .where((Sensor sensor) => sensor.id != sensorId)
           .toList();
       state = state.kopyala(sensorler: guncel, hataMesajiniTemizle: true);
+      await senkronYoneticisi.senkronizeSensorSil(sensorId: sensorId);
     } catch (e) {
       state = state.kopyala(hataMesaji: 'Sensör silinemedi: ${e.toString()}');
     }
@@ -103,5 +112,11 @@ final StateNotifierProvider<SensorDenetleyici, SensorDurumu>
 sensorDenetleyiciProvider =
     StateNotifierProvider<SensorDenetleyici, SensorDurumu>((Ref ref) {
       final SensorDeposu depo = hizmetBulucu<SensorDeposu>();
-      return SensorDenetleyici(sensorDeposu: depo, uuid: const Uuid());
+      final SenkronYoneticisi senkronYoneticisi =
+          hizmetBulucu<SenkronYoneticisi>();
+      return SensorDenetleyici(
+        sensorDeposu: depo,
+        uuid: const Uuid(),
+        senkronYoneticisi: senkronYoneticisi,
+      );
     });
