@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.otto.benimuygulamam.benim_ilk_uygulamam"
+    namespace = "com.novaagro.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -21,7 +21,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.otto.benimuygulamam.benim_ilk_uygulamam"
+        applicationId = "com.novaagro.app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

@@ -1,10 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 
-import 'package:benim_ilk_uygulamam/core/di/hizmet_bulucu.dart';
-import 'package:benim_ilk_uygulamam/features/harita/denetleyiciler/harita_durumu.dart';
-import 'package:benim_ilk_uygulamam/features/harita/depocular/parsel_konum_deposu.dart';
-import 'package:benim_ilk_uygulamam/features/harita/varliklar/parsel.dart';
+import 'package:nova_agro/core/di/hizmet_bulucu.dart';
+import 'package:nova_agro/features/harita/denetleyiciler/harita_durumu.dart';
+import 'package:nova_agro/features/harita/depocular/parsel_konum_deposu.dart';
+import 'package:nova_agro/features/harita/varliklar/parsel.dart';
 
 class HaritaDenetleyici extends StateNotifier<HaritaDurumu> {
   final ParselKonumDeposu parselKonumDeposu;

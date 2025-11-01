@@ -1,6 +1,6 @@
 {
-    "name": "benim_ilk_uygulamam",
-    "short_name": "benim_ilk_uygulamam",
+  "name": "Nova Agro",
+  "short_name": "Nova Agro",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

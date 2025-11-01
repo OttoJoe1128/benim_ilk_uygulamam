@@ -1,6 +1,6 @@
-import 'package:benim_ilk_uygulamam/features/harita/depocular/parsel_konum_deposu.dart';
-import 'package:benim_ilk_uygulamam/features/harita/varliklar/parsel.dart';
-import 'package:benim_ilk_uygulamam/features/harita/veri_kaynaklari/geojson_parsel_kaynagi.dart';
+import 'package:nova_agro/features/harita/depocular/parsel_konum_deposu.dart';
+import 'package:nova_agro/features/harita/varliklar/parsel.dart';
+import 'package:nova_agro/features/harita/veri_kaynaklari/geojson_parsel_kaynagi.dart';
 
 class GeojsonParselKonumDeposu implements ParselKonumDeposu {
   final GeojsonParselKaynagi kaynagi;

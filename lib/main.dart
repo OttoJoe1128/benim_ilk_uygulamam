@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:benim_ilk_uygulamam/core/di/hizmet_bulucu.dart';
-import 'package:benim_ilk_uygulamam/core/tema/uygulama_tema.dart';
-import 'package:benim_ilk_uygulamam/core/yerellestirme/uygulama_dilleri.dart';
-import 'package:benim_ilk_uygulamam/core/yonlendirme/uygulama_router.dart';
-import 'package:benim_ilk_uygulamam/features/harita/harita_modulu.dart';
+import 'package:nova_agro/core/di/hizmet_bulucu.dart';
+import 'package:nova_agro/core/tema/uygulama_tema.dart';
+import 'package:nova_agro/core/yerellestirme/uygulama_dilleri.dart';
+import 'package:nova_agro/core/yonlendirme/uygulama_router.dart';
+import 'package:nova_agro/features/harita/harita_modulu.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();

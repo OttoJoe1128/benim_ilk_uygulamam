@@ -1,6 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 
-import 'package:benim_ilk_uygulamam/features/harita/sunuma/harita_sayfasi.dart';
+import 'package:nova_agro/features/harita/sunuma/harita_sayfasi.dart';
 
 part 'uygulama_router.gr.dart';
 

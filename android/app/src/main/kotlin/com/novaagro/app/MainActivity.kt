@@ -1,4 +1,4 @@
-package com.otto.benimuygulamam.benim_ilk_uygulamam
+package com.novaagro.app
 
 import io.flutter.embedding.android.FlutterActivity
 

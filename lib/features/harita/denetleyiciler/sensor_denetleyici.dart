@@ -2,10 +2,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:uuid/uuid.dart';
 
-import 'package:benim_ilk_uygulamam/core/di/hizmet_bulucu.dart';
-import 'package:benim_ilk_uygulamam/features/harita/denetleyiciler/sensor_durumu.dart';
-import 'package:benim_ilk_uygulamam/features/harita/depocular/sensor_deposu.dart';
-import 'package:benim_ilk_uygulamam/features/harita/varliklar/sensor.dart';
+import 'package:nova_agro/core/di/hizmet_bulucu.dart';
+import 'package:nova_agro/features/harita/denetleyiciler/sensor_durumu.dart';
+import 'package:nova_agro/features/harita/depocular/sensor_deposu.dart';
+import 'package:nova_agro/features/harita/varliklar/sensor.dart';
 
 class SensorDenetleyici extends StateNotifier<SensorDurumu> {
   final SensorDeposu sensorDeposu;

@@ -6,19 +6,19 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 
-import 'package:benim_ilk_uygulamam/core/sabitler/harita_sabitleri.dart';
-import 'package:benim_ilk_uygulamam/features/harita/denetleyiciler/harita_denetleyici.dart';
-import 'package:benim_ilk_uygulamam/features/harita/denetleyiciler/harita_durumu.dart';
-import 'package:benim_ilk_uygulamam/features/harita/denetleyiciler/konum_denetleyici.dart';
-import 'package:benim_ilk_uygulamam/features/harita/denetleyiciler/konum_durumu.dart';
-import 'package:benim_ilk_uygulamam/features/harita/denetleyiciler/sensor_denetleyici.dart';
-import 'package:benim_ilk_uygulamam/features/harita/denetleyiciler/sensor_durumu.dart';
-import 'package:benim_ilk_uygulamam/features/harita/denetleyiciler/sulama_cizim_denetleyici.dart';
-import 'package:benim_ilk_uygulamam/features/harita/denetleyiciler/sulama_cizim_durumu.dart';
-import 'package:benim_ilk_uygulamam/features/harita/denetleyiciler/tasarim_modu.dart';
-import 'package:benim_ilk_uygulamam/features/harita/denetleyiciler/tasarim_modu_provider.dart';
-import 'package:benim_ilk_uygulamam/features/harita/sunuma/ciftlik_tasarim_paneli.dart';
-import 'package:benim_ilk_uygulamam/features/harita/varliklar/sensor.dart';
+import 'package:nova_agro/core/sabitler/harita_sabitleri.dart';
+import 'package:nova_agro/features/harita/denetleyiciler/harita_denetleyici.dart';
+import 'package:nova_agro/features/harita/denetleyiciler/harita_durumu.dart';
+import 'package:nova_agro/features/harita/denetleyiciler/konum_denetleyici.dart';
+import 'package:nova_agro/features/harita/denetleyiciler/konum_durumu.dart';
+import 'package:nova_agro/features/harita/denetleyiciler/sensor_denetleyici.dart';
+import 'package:nova_agro/features/harita/denetleyiciler/sensor_durumu.dart';
+import 'package:nova_agro/features/harita/denetleyiciler/sulama_cizim_denetleyici.dart';
+import 'package:nova_agro/features/harita/denetleyiciler/sulama_cizim_durumu.dart';
+import 'package:nova_agro/features/harita/denetleyiciler/tasarim_modu.dart';
+import 'package:nova_agro/features/harita/denetleyiciler/tasarim_modu_provider.dart';
+import 'package:nova_agro/features/harita/sunuma/ciftlik_tasarim_paneli.dart';
+import 'package:nova_agro/features/harita/varliklar/sensor.dart';
 
 @RoutePage(name: 'HaritaRoute')
 class HaritaEkraniKapsayici extends StatelessWidget {
@@ -224,7 +224,7 @@ class _HaritaSayfasiState extends ConsumerState<HaritaSayfasi> {
                   children: <Widget>[
                     TileLayer(
                       urlTemplate: HaritaSabitleri.tileUrlSablonu(),
-                      userAgentPackageName: 'benim_ilk_uygulamam',
+                      userAgentPackageName: 'nova_agro',
                     ),
                     if (durum is BasariliDurumu)
                       PolygonLayer(

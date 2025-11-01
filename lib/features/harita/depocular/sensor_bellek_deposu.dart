@@ -1,5 +1,5 @@
-import 'package:benim_ilk_uygulamam/features/harita/depocular/sensor_deposu.dart';
-import 'package:benim_ilk_uygulamam/features/harita/varliklar/sensor.dart';
+import 'package:nova_agro/features/harita/depocular/sensor_deposu.dart';
+import 'package:nova_agro/features/harita/varliklar/sensor.dart';
 
 class SensorBellekDeposu implements SensorDeposu {
   final List<Sensor> _sensorler = <Sensor>[];

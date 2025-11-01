@@ -1,8 +1,8 @@
 import 'package:latlong2/latlong.dart';
 import 'package:sqflite/sqflite.dart';
 
-import 'package:benim_ilk_uygulamam/core/veritabani/veritabani_yonetici.dart';
-import 'package:benim_ilk_uygulamam/features/harita/depocular/sulama_cizim_deposu.dart';
+import 'package:nova_agro/core/veritabani/veritabani_yonetici.dart';
+import 'package:nova_agro/features/harita/depocular/sulama_cizim_deposu.dart';
 
 class SulamaCizimSqliteDeposu implements SulamaCizimDeposu {
   final VeritabaniYoneticisi veritabaniYoneticisi;

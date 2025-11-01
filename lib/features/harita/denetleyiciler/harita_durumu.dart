@@ -1,4 +1,4 @@
-import 'package:benim_ilk_uygulamam/features/harita/varliklar/parsel.dart';
+import 'package:nova_agro/features/harita/varliklar/parsel.dart';
 
 sealed class HaritaDurumu {
   const HaritaDurumu();

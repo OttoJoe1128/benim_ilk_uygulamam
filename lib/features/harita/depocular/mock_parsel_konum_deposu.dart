@@ -2,8 +2,8 @@ import 'dart:math' as math;
 
 import 'package:latlong2/latlong.dart';
 
-import 'package:benim_ilk_uygulamam/features/harita/depocular/parsel_konum_deposu.dart';
-import 'package:benim_ilk_uygulamam/features/harita/varliklar/parsel.dart';
+import 'package:nova_agro/features/harita/depocular/parsel_konum_deposu.dart';
+import 'package:nova_agro/features/harita/varliklar/parsel.dart';
 
 /// Geliştirme aşamasında dış servise gitmeden sahte bir parsel alanı döndürür.
 /// Gerçek kullanımda MEGSIS/Parsel Sorgu veya QGIS/GeoJSON entegrasyonu yapılmalıdır.

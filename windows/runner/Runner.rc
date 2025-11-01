@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.otto.benimuygulamam" "\0"
-            VALUE "FileDescription", "benim_ilk_uygulamam" "\0"
+            VALUE "CompanyName", "Nova Agro" "\0"
+            VALUE "FileDescription", "Nova Agro" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "benim_ilk_uygulamam" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2025 com.otto.benimuygulamam. All rights reserved." "\0"
-            VALUE "OriginalFilename", "benim_ilk_uygulamam.exe" "\0"
-            VALUE "ProductName", "benim_ilk_uygulamam" "\0"
+            VALUE "InternalName", "Nova Agro" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2025 Nova Agro. All rights reserved." "\0"
+            VALUE "OriginalFilename", "NovaAgro.exe" "\0"
+            VALUE "ProductName", "Nova Agro" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

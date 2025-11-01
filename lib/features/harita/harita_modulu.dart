@@ -1,14 +1,14 @@
-import 'package:benim_ilk_uygulamam/core/di/hizmet_bulucu.dart';
-import 'package:benim_ilk_uygulamam/core/veritabani/veritabani_yonetici.dart';
-import 'package:benim_ilk_uygulamam/features/harita/depocular/geojson_parsel_konum_deposu.dart';
-import 'package:benim_ilk_uygulamam/features/harita/depocular/parsel_konum_deposu.dart';
-import 'package:benim_ilk_uygulamam/features/harita/depocular/sensor_deposu.dart';
-import 'package:benim_ilk_uygulamam/features/harita/depocular/sensor_sqlite_deposu.dart';
-import 'package:benim_ilk_uygulamam/features/harita/depocular/sulama_cizim_deposu.dart';
-import 'package:benim_ilk_uygulamam/features/harita/depocular/sulama_cizim_sqlite_deposu.dart';
-import 'package:benim_ilk_uygulamam/features/harita/denetleyiciler/konum_denetleyici.dart';
-import 'package:benim_ilk_uygulamam/features/harita/hizmetler/konum_hizmeti.dart';
-import 'package:benim_ilk_uygulamam/features/harita/veri_kaynaklari/geojson_parsel_kaynagi.dart';
+import 'package:nova_agro/core/di/hizmet_bulucu.dart';
+import 'package:nova_agro/core/veritabani/veritabani_yonetici.dart';
+import 'package:nova_agro/features/harita/depocular/geojson_parsel_konum_deposu.dart';
+import 'package:nova_agro/features/harita/depocular/parsel_konum_deposu.dart';
+import 'package:nova_agro/features/harita/depocular/sensor_deposu.dart';
+import 'package:nova_agro/features/harita/depocular/sensor_sqlite_deposu.dart';
+import 'package:nova_agro/features/harita/depocular/sulama_cizim_deposu.dart';
+import 'package:nova_agro/features/harita/depocular/sulama_cizim_sqlite_deposu.dart';
+import 'package:nova_agro/features/harita/denetleyiciler/konum_denetleyici.dart';
+import 'package:nova_agro/features/harita/hizmetler/konum_hizmeti.dart';
+import 'package:nova_agro/features/harita/veri_kaynaklari/geojson_parsel_kaynagi.dart';
 
 void kurHaritaModulu() {
   if (hizmetBulucu.isRegistered<ParselKonumDeposu>()) {

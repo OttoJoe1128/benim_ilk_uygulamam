@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:benim_ilk_uygulamam/features/harita/denetleyiciler/sensor_denetleyici.dart';
-import 'package:benim_ilk_uygulamam/features/harita/denetleyiciler/sensor_durumu.dart';
-import 'package:benim_ilk_uygulamam/features/harita/denetleyiciler/sulama_cizim_denetleyici.dart';
-import 'package:benim_ilk_uygulamam/features/harita/denetleyiciler/sulama_cizim_durumu.dart';
-import 'package:benim_ilk_uygulamam/features/harita/denetleyiciler/tasarim_modu.dart';
-import 'package:benim_ilk_uygulamam/features/harita/denetleyiciler/tasarim_modu_provider.dart';
-import 'package:benim_ilk_uygulamam/features/harita/varliklar/sensor.dart';
+import 'package:nova_agro/features/harita/denetleyiciler/sensor_denetleyici.dart';
+import 'package:nova_agro/features/harita/denetleyiciler/sensor_durumu.dart';
+import 'package:nova_agro/features/harita/denetleyiciler/sulama_cizim_denetleyici.dart';
+import 'package:nova_agro/features/harita/denetleyiciler/sulama_cizim_durumu.dart';
+import 'package:nova_agro/features/harita/denetleyiciler/tasarim_modu.dart';
+import 'package:nova_agro/features/harita/denetleyiciler/tasarim_modu_provider.dart';
+import 'package:nova_agro/features/harita/varliklar/sensor.dart';
 
 class CiftlikTasarimPaneli extends ConsumerWidget {
   final String baslik;

@@ -1,6 +1,6 @@
 import 'package:latlong2/latlong.dart';
 
-import 'package:benim_ilk_uygulamam/features/harita/depocular/sulama_cizim_deposu.dart';
+import 'package:nova_agro/features/harita/depocular/sulama_cizim_deposu.dart';
 
 class SulamaCizimBellekDeposu implements SulamaCizimDeposu {
   List<LatLng> _noktalar = <LatLng>[];

@@ -3,9 +3,9 @@ import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import 'package:benim_ilk_uygulamam/core/di/hizmet_bulucu.dart';
-import 'package:benim_ilk_uygulamam/features/harita/denetleyiciler/konum_durumu.dart';
-import 'package:benim_ilk_uygulamam/features/harita/hizmetler/konum_hizmeti.dart';
+import 'package:nova_agro/core/di/hizmet_bulucu.dart';
+import 'package:nova_agro/features/harita/denetleyiciler/konum_durumu.dart';
+import 'package:nova_agro/features/harita/hizmetler/konum_hizmeti.dart';
 
 class KonumDenetleyici extends StateNotifier<KonumDurumu> {
   final KonumHizmeti konumHizmeti;

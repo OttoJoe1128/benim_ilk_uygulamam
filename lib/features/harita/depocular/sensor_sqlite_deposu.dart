@@ -1,9 +1,9 @@
 import 'package:latlong2/latlong.dart';
 import 'package:sqflite/sqflite.dart';
 
-import 'package:benim_ilk_uygulamam/core/veritabani/veritabani_yonetici.dart';
-import 'package:benim_ilk_uygulamam/features/harita/depocular/sensor_deposu.dart';
-import 'package:benim_ilk_uygulamam/features/harita/varliklar/sensor.dart';
+import 'package:nova_agro/core/veritabani/veritabani_yonetici.dart';
+import 'package:nova_agro/features/harita/depocular/sensor_deposu.dart';
+import 'package:nova_agro/features/harita/varliklar/sensor.dart';
 
 class SensorSqliteDeposu implements SensorDeposu {
   final VeritabaniYoneticisi veritabaniYoneticisi;
