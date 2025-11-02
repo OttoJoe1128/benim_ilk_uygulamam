@@ -1,7 +1,5 @@
 // ignore_for_file: constant_identifier_names
 
-import 'package:flutter/foundation.dart';
-
 /// Harita ve Mapbox yapılandırma sabitleri
 /// Dikkat: Gerçek erişim anahtarını gizli tutun ve burada saklamayın.
 /// Geliştirme sırasında .env ya da güvenli bir kaynaktan besleyin.

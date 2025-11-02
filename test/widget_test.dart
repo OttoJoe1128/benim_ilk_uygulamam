@@ -5,26 +5,75 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
-import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:latlong2/latlong.dart';
 
-import 'package:benim_ilk_uygulamam/main.dart';
+import 'package:nova_agro/core/di/hizmet_bulucu.dart';
+import 'package:nova_agro/features/harita/depocular/sensor_bellek_deposu.dart';
+import 'package:nova_agro/features/harita/depocular/sensor_deposu.dart';
+import 'package:nova_agro/features/harita/depocular/senkron_islem_bellek_deposu.dart';
+import 'package:nova_agro/features/harita/depocular/senkron_islem_deposu.dart';
+import 'package:nova_agro/features/harita/depocular/sulama_cizim_bellek_deposu.dart';
+import 'package:nova_agro/features/harita/depocular/sulama_cizim_deposu.dart';
+import 'package:nova_agro/features/harita/harita_modulu.dart';
+import 'package:nova_agro/features/harita/servisler/hava_tahmini_servisi.dart';
+import 'package:nova_agro/features/harita/servisler/nova_cloud_servisi.dart';
+import 'package:nova_agro/features/harita/senkronizasyon/senkron_yoneticisi.dart';
+import 'package:nova_agro/features/harita/varliklar/hava_durumu.dart';
+import 'package:nova_agro/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
-
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+  setUp(() async {
+    await hizmetBulucu.reset(dispose: true);
+    kurHizmetBulucu(moduller: <ModulKaydedici>[kurHaritaModulu]);
+    await hizmetBulucu.unregister<SensorDeposu>();
+    await hizmetBulucu.unregister<SulamaCizimDeposu>();
+    await hizmetBulucu.unregister<SenkronIslemDeposu>();
+    await hizmetBulucu.unregister<NovaCloudServisi>();
+    await hizmetBulucu.unregister<SenkronYoneticisi>();
+    await hizmetBulucu.unregister<Dio>();
+    await hizmetBulucu.unregister<HavaTahminiServisi>();
+    hizmetBulucu.registerLazySingleton<SensorDeposu>(SensorBellekDeposu.new);
+    hizmetBulucu.registerLazySingleton<SulamaCizimDeposu>(
+      SulamaCizimBellekDeposu.new,
+    );
+    hizmetBulucu.registerLazySingleton<SenkronIslemDeposu>(
+      SenkronIslemBellekDeposu.new,
+    );
+    hizmetBulucu.registerLazySingleton<Dio>(Dio.new);
+    hizmetBulucu.registerLazySingleton<NovaCloudServisi>(
+      () => NovaCloudServisiFake(dio: hizmetBulucu<Dio>(), hataOlasiligi: 0),
+    );
+    hizmetBulucu.registerLazySingleton<HavaTahminiServisi>(
+      FakeHavaTahminiServisi.new,
+    );
+    hizmetBulucu.registerLazySingleton<SenkronYoneticisi>(
+      () => SenkronYoneticisi(
+        novaCloudServisi: hizmetBulucu<NovaCloudServisi>(),
+        senkronIslemDeposu: hizmetBulucu<SenkronIslemDeposu>(),
+      ),
+    );
   });
+
+  testWidgets('Harita ekranı başlatma testi', (WidgetTester tester) async {
+    await tester.pumpWidget(const ProviderScope(child: MyApp()));
+    await tester.pumpAndSettle();
+    expect(find.text('Nova Agro – Harita'), findsOneWidget);
+    expect(find.text('Bul'), findsOneWidget);
+  });
+}
+
+class FakeHavaTahminiServisi implements HavaTahminiServisi {
+  @override
+  Future<HavaDurumu> getirHavaDurumu({required LatLng konum}) async {
+    return HavaDurumu(
+      sicaklikC: 20,
+      hissedilenSicaklikC: null,
+      ruzgarHiziMs: 3,
+      havaDurumuMetni: 'Test havası',
+      guncellemeZamani: DateTime.now(),
+    );
+  }
 }

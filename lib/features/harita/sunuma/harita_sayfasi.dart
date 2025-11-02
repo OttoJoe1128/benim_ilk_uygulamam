@@ -1,30 +1,35 @@
+import 'dart:async';
+
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 
-import 'package:benim_ilk_uygulamam/core/sabitler/harita_sabitleri.dart';
-import 'package:benim_ilk_uygulamam/features/harita/denetleyiciler/harita_denetleyici.dart';
-import 'package:benim_ilk_uygulamam/features/harita/depocular/geojson_parsel_konum_deposu.dart';
-import 'package:benim_ilk_uygulamam/features/harita/veri_kaynaklari/geojson_parsel_kaynagi.dart';
-import 'package:benim_ilk_uygulamam/features/harita/denetleyiciler/harita_durumu.dart';
-import 'package:benim_ilk_uygulamam/features/harita/sunuma/ciftlik_tasarim_paneli.dart';
+import 'package:nova_agro/core/sabitler/harita_sabitleri.dart';
+import 'package:nova_agro/features/harita/denetleyiciler/harita_denetleyici.dart';
+import 'package:nova_agro/features/harita/denetleyiciler/harita_durumu.dart';
+import 'package:nova_agro/features/harita/denetleyiciler/hava_tahmini_denetleyici.dart';
+import 'package:nova_agro/features/harita/denetleyiciler/hava_tahmini_durumu.dart';
+import 'package:nova_agro/features/harita/denetleyiciler/konum_denetleyici.dart';
+import 'package:nova_agro/features/harita/denetleyiciler/konum_durumu.dart';
+import 'package:nova_agro/features/harita/denetleyiciler/sensor_denetleyici.dart';
+import 'package:nova_agro/features/harita/denetleyiciler/sensor_durumu.dart';
+import 'package:nova_agro/features/harita/denetleyiciler/sulama_cizim_denetleyici.dart';
+import 'package:nova_agro/features/harita/denetleyiciler/sulama_cizim_durumu.dart';
+import 'package:nova_agro/features/harita/denetleyiciler/tasarim_modu.dart';
+import 'package:nova_agro/features/harita/denetleyiciler/tasarim_modu_provider.dart';
+import 'package:nova_agro/features/harita/sunuma/ciftlik_tasarim_paneli.dart';
+import 'package:nova_agro/features/harita/varliklar/hava_durumu.dart';
+import 'package:nova_agro/features/harita/varliklar/sensor.dart';
 
+@RoutePage(name: 'HaritaRoute')
 class HaritaEkraniKapsayici extends StatelessWidget {
   const HaritaEkraniKapsayici({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final GeojsonParselKaynagi kaynagi = GeojsonParselKaynagi(
-      assetYolu: 'assets/geo/parseller.geojson',
-    );
-    final GeojsonParselKonumDeposu depo = GeojsonParselKonumDeposu(kaynagi: kaynagi);
-    return ProviderScope(
-      overrides: <Override>[
-        haritaDenetleyiciProvider.overrideWith((Ref ref) => HaritaDenetleyici(parselKonumDeposu: depo)),
-      ],
-      child: const HaritaSayfasi(),
-    );
+    return const HaritaSayfasi();
   }
 }
 
@@ -40,18 +45,94 @@ class _HaritaSayfasiState extends ConsumerState<HaritaSayfasi> {
   final TextEditingController adaDenetleyici = TextEditingController();
   final TextEditingController parselDenetleyici = TextEditingController();
   final MapController haritaDenetleyici = MapController();
+  ProviderSubscription<KonumDurumu>? konumAboneligi;
+  ProviderSubscription<SensorDurumu>? sensorAboneligi;
+  LatLng? sonHavaTahminiKonumu;
+
+  @override
+  void initState() {
+    super.initState();
+    konumAboneligi = ref.listenManual<KonumDurumu>(konumDenetleyiciProvider, (
+      KonumDurumu? onceki,
+      KonumDurumu yeni,
+    ) {
+      if (!mounted) {
+        return;
+      }
+      if (yeni is KonumHataDurumu || yeni is KonumIzinRedDurumu) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) {
+            return;
+          }
+          final String mesaj = yeni is KonumHataDurumu
+              ? yeni.mesaj
+              : (yeni as KonumIzinRedDurumu).mesaj;
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(mesaj)));
+        });
+      }
+      if (yeni is KonumBasariliDurumu) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) {
+            return;
+          }
+          haritaDenetleyici.move(
+            yeni.kullaniciKonumu,
+            HaritaSabitleri.VARSAYILAN_YAKINLASMA,
+          );
+        });
+      }
+    });
+    sensorAboneligi = ref.listenManual<SensorDurumu>(
+      sensorDenetleyiciProvider,
+      (SensorDurumu? onceki, SensorDurumu yeni) {
+        if (!mounted) {
+          return;
+        }
+        final String? mesaj = yeni.hataMesaji;
+        final bool mesajDegisti =
+            mesaj != null && mesaj.isNotEmpty && mesaj != onceki?.hataMesaji;
+        if (mesajDegisti) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(mesaj)));
+        }
+      },
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      unawaited(ref.read(sensorDenetleyiciProvider.notifier).yukleSensorler());
+      unawaited(
+        ref.read(sulamaCizimDenetleyiciProvider.notifier).yukleNoktalar(),
+      );
+    });
+  }
 
   @override
   void dispose() {
     arsaDenetleyici.dispose();
     adaDenetleyici.dispose();
     parselDenetleyici.dispose();
+    konumAboneligi?.close();
+    sensorAboneligi?.close();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final HaritaDurumu durum = ref.watch(haritaDenetleyiciProvider);
+    final KonumDurumu konumDurumu = ref.watch(konumDenetleyiciProvider);
+    final TasarimModu tasarimModu = ref.watch(tasarimModuProvider);
+    final SulamaCizimDurumu sulamaDurumu = ref.watch(
+      sulamaCizimDenetleyiciProvider,
+    );
+    final SensorDurumu sensorDurumu = ref.watch(sensorDenetleyiciProvider);
+    final HavaTahminiDurumu havaDurumu = ref.watch(
+      havaTahminiDenetleyiciProvider,
+    );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (durum is BasariliDurumu) {
@@ -62,6 +143,41 @@ class _HaritaSayfasiState extends ConsumerState<HaritaSayfasi> {
 
     final String tokenUyarisi = HaritaSabitleri.tokenUyarisi();
 
+    final bool konumIslemde =
+        konumDurumu is KonumYukleniyorDurumu ||
+        konumDurumu is KonumIzinBekleniyorDurumu;
+    final LatLng? kullaniciKonumu = konumDurumu is KonumBasariliDurumu
+        ? konumDurumu.kullaniciKonumu
+        : null;
+    final bool sulamaCizimiVar = sulamaDurumu.noktalar.length >= 2;
+    final List<Sensor> sensorler = sensorDurumu.sensorler;
+    final bool tasarimIsaretcisiGoster = tasarimModu != TasarimModu.hicbiri;
+
+    final LatLng? havaIcinKonum = _secHavaKonumu(
+      durum: durum,
+      kullaniciKonumu: kullaniciKonumu,
+    );
+    if (havaIcinKonum != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) {
+          return;
+        }
+        final bool yenileGerekli =
+            sonHavaTahminiKonumu == null ||
+            _havaKonumuDegisti(
+              onceki: sonHavaTahminiKonumu!,
+              yeni: havaIcinKonum,
+            );
+        if (yenileGerekli) {
+          sonHavaTahminiKonumu = havaIcinKonum;
+          unawaited(
+            ref
+                .read(havaTahminiDenetleyiciProvider.notifier)
+                .yukle(konum: havaIcinKonum),
+          );
+        }
+      });
+    }
     return Scaffold(
       appBar: AppBar(title: const Text('Nova Agro – Harita')),
       body: Column(
@@ -71,13 +187,17 @@ class _HaritaSayfasiState extends ConsumerState<HaritaSayfasi> {
               content: Text(tokenUyarisi),
               actions: <Widget>[
                 TextButton(
-                  onPressed: () => ScaffoldMessenger.of(context).hideCurrentMaterialBanner(),
+                  onPressed: () =>
+                      ScaffoldMessenger.of(context).hideCurrentMaterialBanner(),
                   child: const Text('Kapat'),
-                )
+                ),
               ],
             ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 12.0,
+              vertical: 8.0,
+            ),
             child: Row(
               children: <Widget>[
                 Expanded(
@@ -106,7 +226,9 @@ class _HaritaSayfasiState extends ConsumerState<HaritaSayfasi> {
                 const SizedBox(width: 8),
                 FilledButton(
                   onPressed: () async {
-                    await ref.read(haritaDenetleyiciProvider.notifier).araVeSec(
+                    await ref
+                        .read(haritaDenetleyiciProvider.notifier)
+                        .araVeSec(
                           arsaNo: arsaDenetleyici.text.trim(),
                           adaNo: adaDenetleyici.text.trim(),
                           parselNo: parselDenetleyici.text.trim(),
@@ -117,49 +239,150 @@ class _HaritaSayfasiState extends ConsumerState<HaritaSayfasi> {
               ],
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0),
+            child: _HavaDurumuKart(havaDurumu: havaDurumu),
+          ),
+          const SizedBox(height: 8),
           Expanded(
-            child: FlutterMap(
-              mapController: haritaDenetleyici,
-              options: MapOptions(
-                initialCenter: const LatLng(
-                  HaritaSabitleri.BASLANGIC_ENLEM,
-                  HaritaSabitleri.BASLANGIC_BOYLAM,
-                ),
-                initialZoom: HaritaSabitleri.VARSAYILAN_YAKINLASMA,
-                onTap: (TapPosition _, LatLng nokta) {
-                  final HaritaDenetleyici not = ref.read(haritaDenetleyiciProvider.notifier);
-                  if (durum is BasariliDurumu) {
-                    final bool icinde = not.isNoktaPoligonIcinde(
-                      nokta: nokta,
-                      poligon: durum.seciliParsel.sinirNoktalari,
-                    );
-                    if (icinde) {
-                      _gosterTasarimPaneli(context, durum);
-                    }
-                  }
-                },
-              ),
+            child: Stack(
               children: <Widget>[
-                TileLayer(
-                  urlTemplate: HaritaSabitleri.tileUrlSablonu(),
-                  userAgentPackageName: 'benim_ilk_uygulamam',
-                ),
-                if (durum is BasariliDurumu)
-                  PolygonLayer(
-                    polygons: <Polygon>[
-                      Polygon(
-                        borderColor: Colors.green.shade700,
-                        borderStrokeWidth: 2.0,
-                        color: Colors.green.withOpacity(0.25),
-                        points: durum.seciliParsel.sinirNoktalari,
-                        isFilled: true,
-                      ),
-                    ],
+                FlutterMap(
+                  mapController: haritaDenetleyici,
+                  options: MapOptions(
+                    initialCenter: const LatLng(
+                      HaritaSabitleri.BASLANGIC_ENLEM,
+                      HaritaSabitleri.BASLANGIC_BOYLAM,
+                    ),
+                    initialZoom: HaritaSabitleri.VARSAYILAN_YAKINLASMA,
+                    onTap: (TapPosition _, LatLng nokta) {
+                      unawaited(_isleHaritaTiklama(nokta: nokta));
+                    },
                   ),
+                  children: <Widget>[
+                    TileLayer(
+                      urlTemplate: HaritaSabitleri.tileUrlSablonu(),
+                      userAgentPackageName: 'nova_agro',
+                    ),
+                    if (durum is BasariliDurumu)
+                      PolygonLayer(
+                        polygons: <Polygon>[
+                          Polygon(
+                            borderColor: Colors.green.shade700,
+                            borderStrokeWidth: 2.0,
+                            color: Colors.green.withValues(alpha: 0.25),
+                            points: durum.seciliParsel.sinirNoktalari,
+                          ),
+                        ],
+                      ),
+                    if (kullaniciKonumu != null)
+                      CircleLayer(
+                        circles: <CircleMarker>[
+                          CircleMarker(
+                            point: kullaniciKonumu,
+                            color: Colors.blue.withValues(alpha: 0.15),
+                            borderColor: Colors.blueAccent,
+                            borderStrokeWidth: 2,
+                            useRadiusInMeter: true,
+                            radius: 35,
+                          ),
+                        ],
+                      ),
+                    if (kullaniciKonumu != null)
+                      MarkerLayer(
+                        markers: <Marker>[
+                          Marker(
+                            point: kullaniciKonumu,
+                            width: 40,
+                            height: 40,
+                            child: const Icon(
+                              Icons.my_location,
+                              color: Colors.blue,
+                              size: 28,
+                            ),
+                          ),
+                        ],
+                      ),
+                    if (sulamaCizimiVar)
+                      PolylineLayer(
+                        polylines: <Polyline>[
+                          Polyline(
+                            points: sulamaDurumu.noktalar,
+                            strokeWidth: 4,
+                            color: Colors.teal.shade600,
+                          ),
+                        ],
+                      ),
+                    if (sensorler.isNotEmpty)
+                      MarkerLayer(
+                        markers: sensorler
+                            .map(
+                              (Sensor sensor) => Marker(
+                                point: sensor.konum,
+                                width: 48,
+                                height: 48,
+                                child: Tooltip(
+                                  message: sensor.ad,
+                                  child: const Icon(
+                                    Icons.sensors,
+                                    color: Colors.deepOrange,
+                                    size: 28,
+                                  ),
+                                ),
+                              ),
+                            )
+                            .toList(),
+                      ),
+                  ],
+                ),
+                if (tasarimIsaretcisiGoster)
+                  Positioned(
+                    top: 16,
+                    right: 16,
+                    child: Chip(
+                      avatar: Icon(
+                        tasarimModu == TasarimModu.sulamaCizimi
+                            ? Icons.timeline
+                            : Icons.sensors,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                      label: Text(
+                        tasarimModu == TasarimModu.sulamaCizimi
+                            ? 'Sulama çizimi aktif (${sulamaDurumu.noktalar.length})'
+                            : 'Sensör ekleme modu',
+                      ),
+                      backgroundColor: Colors.teal.shade600,
+                      labelStyle: const TextStyle(color: Colors.white),
+                    ),
+                  ),
+                Positioned(
+                  right: 16,
+                  bottom: 16,
+                  child: FloatingActionButton(
+                    onPressed: konumIslemde
+                        ? null
+                        : () async {
+                            await ref
+                                .read(konumDenetleyiciProvider.notifier)
+                                .isteKonumVeIzinleri();
+                          },
+                    tooltip: 'Konumuma git',
+                    child: konumIslemde
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.my_location),
+                  ),
+                ),
               ],
             ),
           ),
-          if (durum is YukleniyorDurumu)
+          if (durum is YukleniyorDurumu ||
+              konumIslemde ||
+              sensorDurumu.isYukleniyor)
             const LinearProgressIndicator(minHeight: 2),
         ],
       ),
@@ -172,9 +395,152 @@ class _HaritaSayfasiState extends ConsumerState<HaritaSayfasi> {
       useSafeArea: true,
       showDragHandle: true,
       builder: (BuildContext ctx) {
-        final String baslik = 'Arsa ${durum.seciliParsel.arsaNo} · Ada ${durum.seciliParsel.adaNo} · Parsel ${durum.seciliParsel.parselNo}';
+        final String baslik =
+            'Arsa ${durum.seciliParsel.arsaNo} · Ada ${durum.seciliParsel.adaNo} · Parsel ${durum.seciliParsel.parselNo}';
         return CiftlikTasarimPaneli(baslik: baslik);
       },
+    );
+  }
+
+  Future<void> _isleHaritaTiklama({required LatLng nokta}) async {
+    final TasarimModu aktifMod = ref.read(tasarimModuProvider);
+    if (aktifMod == TasarimModu.sulamaCizimi) {
+      ref.read(sulamaCizimDenetleyiciProvider.notifier).ekleNokta(nokta: nokta);
+      return;
+    }
+    if (aktifMod == TasarimModu.sensorEkle) {
+      await _gosterSensorEklemeFormu(konum: nokta);
+      return;
+    }
+    final HaritaDurumu mevcutDurum = ref.read(haritaDenetleyiciProvider);
+    if (mevcutDurum is BasariliDurumu) {
+      final HaritaDenetleyici denetleyici = ref.read(
+        haritaDenetleyiciProvider.notifier,
+      );
+      final bool icinde = denetleyici.isNoktaPoligonIcinde(
+        nokta: nokta,
+        poligon: mevcutDurum.seciliParsel.sinirNoktalari,
+      );
+      if (icinde) {
+        _gosterTasarimPaneli(context, mevcutDurum);
+      }
+    }
+  }
+
+  Future<void> _gosterSensorEklemeFormu({required LatLng konum}) async {
+    final TextEditingController adDenetleyici = TextEditingController();
+    try {
+      final bool? sonuc = await showDialog<bool>(
+        context: context,
+        builder: (BuildContext ctx) {
+          return AlertDialog(
+            title: const Text('Sensör Ekle'),
+            content: TextField(
+              controller: adDenetleyici,
+              decoration: const InputDecoration(labelText: 'Sensör Adı'),
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: const Text('Vazgeç'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(ctx).pop(true),
+                child: const Text('Ekle'),
+              ),
+            ],
+          );
+        },
+      );
+      if (sonuc != true) {
+        return;
+      }
+      await ref
+          .read(sensorDenetleyiciProvider.notifier)
+          .ekleSensor(ad: adDenetleyici.text, konum: konum);
+      final SensorDurumu guncelDurum = ref.read(sensorDenetleyiciProvider);
+      if (guncelDurum.hataMesaji == null && mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Sensör eklendi')));
+      }
+    } finally {
+      adDenetleyici.dispose();
+    }
+  }
+
+  LatLng? _secHavaKonumu({
+    required HaritaDurumu durum,
+    required LatLng? kullaniciKonumu,
+  }) {
+    if (durum is BasariliDurumu) {
+      return durum.seciliParsel.hesaplaMerkez();
+    }
+    return kullaniciKonumu;
+  }
+
+  bool _havaKonumuDegisti({required LatLng onceki, required LatLng yeni}) {
+    const Distance distance = Distance();
+    final double fark = distance(onceki, yeni);
+    return fark > 100.0;
+  }
+}
+
+class _HavaDurumuKart extends StatelessWidget {
+  final HavaTahminiDurumu havaDurumu;
+
+  const _HavaDurumuKart({required this.havaDurumu});
+
+  @override
+  Widget build(BuildContext context) {
+    if (havaDurumu is HavaTahminiIlkDurum) {
+      return const SizedBox.shrink();
+    }
+    if (havaDurumu is HavaTahminiYukleniyorDurumu) {
+      return const Card(
+        child: ListTile(
+          leading: SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(strokeWidth: 3),
+          ),
+          title: Text('Hava durumu yükleniyor...'),
+        ),
+      );
+    }
+    if (havaDurumu is HavaTahminiHataDurumu) {
+      final HavaTahminiHataDurumu hata = havaDurumu as HavaTahminiHataDurumu;
+      return Card(
+        color: Theme.of(context).colorScheme.errorContainer,
+        child: ListTile(
+          leading: Icon(
+            Icons.cloud_off,
+            color: Theme.of(context).colorScheme.onErrorContainer,
+          ),
+          title: Text(
+            hata.mesaj,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onErrorContainer,
+            ),
+          ),
+        ),
+      );
+    }
+    final HavaTahminiBasariliDurumu basarili =
+        havaDurumu as HavaTahminiBasariliDurumu;
+    final HavaDurumu veri = basarili.havaDurumu;
+    final String sicaklikMetni = '${veri.sicaklikC.toStringAsFixed(1)} °C';
+    final String ruzgarMetni = veri.ruzgarHiziMs != null
+        ? 'Rüzgar: ${(veri.ruzgarHiziMs! * 3.6).toStringAsFixed(1)} km/s'
+        : 'Rüzgar verisi yok';
+    final String zamanMetni =
+        'Güncelleme: ${veri.guncellemeZamani.hour.toString().padLeft(2, '0')}:${veri.guncellemeZamani.minute.toString().padLeft(2, '0')}';
+    return Card(
+      child: ListTile(
+        leading: const Icon(Icons.cloud, size: 32),
+        title: Text('${veri.havaDurumuMetni} · $sicaklikMetni'),
+        subtitle: Text('$ruzgarMetni · $zamanMetni'),
+      ),
     );
   }
 }

@@ -26,14 +26,18 @@ class GeojsonParselKaynagi {
       return;
     }
     final String jsonIcerik = await rootBundle.loadString(assetYolu);
-    final Map<String, Object?> kok = json.decode(jsonIcerik) as Map<String, Object?>;
-    final List<Object?> hamOzellikler = (kok['features'] as List<Object?>?) ?? <Object?>[];
-    final Map<String, GeojsonParselKayit> yeniIndeks = <String, GeojsonParselKayit>{};
+    final Map<String, Object?> kok =
+        json.decode(jsonIcerik) as Map<String, Object?>;
+    final List<Object?> hamOzellikler =
+        (kok['features'] as List<Object?>?) ?? <Object?>[];
+    final Map<String, GeojsonParselKayit> yeniIndeks =
+        <String, GeojsonParselKayit>{};
     for (final Object? o in hamOzellikler) {
       if (o is! Map<String, Object?>) continue;
       final Map<String, Object?> ozellik = o;
       final Map<String, Object?> ozellikler =
-          (ozellik['properties'] as Map<String, Object?>?) ?? <String, Object?>{};
+          (ozellik['properties'] as Map<String, Object?>?) ??
+          <String, Object?>{};
       final String? arsaNo = ozellikler['arsaNo']?.toString();
       final String? adaNo = ozellikler['adaNo']?.toString();
       final String? parselNo = ozellikler['parselNo']?.toString();
@@ -46,7 +50,8 @@ class GeojsonParselKaynagi {
       final List<Object?> koordinatlarKok =
           (geometri['coordinates'] as List<Object?>?) ?? <Object?>[];
       if (koordinatlarKok.isEmpty) continue;
-      final List<Object?> halka = (koordinatlarKok.first as List<Object?>?) ?? <Object?>[];
+      final List<Object?> halka =
+          (koordinatlarKok.first as List<Object?>?) ?? <Object?>[];
       final List<LatLng> noktalar = <LatLng>[];
       for (final Object? p in halka) {
         if (p is! List<Object?>) continue;
@@ -64,7 +69,8 @@ class GeojsonParselKaynagi {
         parselNo: parselNo,
         sinirNoktalari: noktalar,
       );
-      yeniIndeks[_anahtar(arsaNo: arsaNo, adaNo: adaNo, parselNo: parselNo)] = kayit;
+      yeniIndeks[_anahtar(arsaNo: arsaNo, adaNo: adaNo, parselNo: parselNo)] =
+          kayit;
     }
     _indeks = yeniIndeks;
   }
@@ -80,7 +86,11 @@ class GeojsonParselKaynagi {
     return indeks[_anahtar(arsaNo: arsaNo, adaNo: adaNo, parselNo: parselNo)];
   }
 
-  String _anahtar({required String arsaNo, required String adaNo, required String parselNo}) {
+  String _anahtar({
+    required String arsaNo,
+    required String adaNo,
+    required String parselNo,
+  }) {
     return '${arsaNo.trim()}|${adaNo.trim()}|${parselNo.trim()}';
   }
 

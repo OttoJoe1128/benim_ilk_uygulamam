@@ -2,8 +2,8 @@ import 'dart:math' as math;
 
 import 'package:latlong2/latlong.dart';
 
-import 'package:benim_ilk_uygulamam/features/harita/depocular/parsel_konum_deposu.dart';
-import 'package:benim_ilk_uygulamam/features/harita/varliklar/parsel.dart';
+import 'package:nova_agro/features/harita/depocular/parsel_konum_deposu.dart';
+import 'package:nova_agro/features/harita/varliklar/parsel.dart';
 
 /// Geliştirme aşamasında dış servise gitmeden sahte bir parsel alanı döndürür.
 /// Gerçek kullanımda MEGSIS/Parsel Sorgu veya QGIS/GeoJSON entegrasyonu yapılmalıdır.
@@ -17,7 +17,11 @@ class MockParselKonumDeposu implements ParselKonumDeposu {
     required String parselNo,
   }) async {
     // Girdi kombinasyonundan deterministik ama sahte bir koordinat üretelim.
-    final int seed = _olusturTohum(arsaNo: arsaNo, adaNo: adaNo, parselNo: parselNo);
+    final int seed = _olusturTohum(
+      arsaNo: arsaNo,
+      adaNo: adaNo,
+      parselNo: parselNo,
+    );
     final math.Random rastgele = math.Random(seed);
 
     // Türkiye sınırları içinde makul bir konum (yaklaşık):
@@ -43,7 +47,11 @@ class MockParselKonumDeposu implements ParselKonumDeposu {
     );
   }
 
-  int _olusturTohum({required String arsaNo, required String adaNo, required String parselNo}) {
+  int _olusturTohum({
+    required String arsaNo,
+    required String adaNo,
+    required String parselNo,
+  }) {
     final String birlesik = '$arsaNo-$adaNo-$parselNo';
     int toplam = 0;
     for (int i = 0; i < birlesik.length; i++) {

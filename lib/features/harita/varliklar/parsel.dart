@@ -19,11 +19,15 @@ class Parsel {
       return const LatLng(0.0, 0.0);
     }
     final double ortEnlem =
-        sinirNoktalari.map((LatLng p) => p.latitude).reduce((double a, double b) => a + b) /
-            sinirNoktalari.length;
+        sinirNoktalari
+            .map((LatLng p) => p.latitude)
+            .reduce((double a, double b) => a + b) /
+        sinirNoktalari.length;
     final double ortBoylam =
-        sinirNoktalari.map((LatLng p) => p.longitude).reduce((double a, double b) => a + b) /
-            sinirNoktalari.length;
+        sinirNoktalari
+            .map((LatLng p) => p.longitude)
+            .reduce((double a, double b) => a + b) /
+        sinirNoktalari.length;
     return LatLng(ortEnlem, ortBoylam);
   }
 }
