@@ -6,8 +6,9 @@
 // tree, read text, and verify that the values of widget properties are correct.
 
 import 'package:dio/dio.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:latlong2/latlong.dart';
 
 import 'package:nova_agro/core/di/hizmet_bulucu.dart';
 import 'package:nova_agro/features/harita/depocular/sensor_bellek_deposu.dart';
@@ -17,8 +18,10 @@ import 'package:nova_agro/features/harita/depocular/senkron_islem_deposu.dart';
 import 'package:nova_agro/features/harita/depocular/sulama_cizim_bellek_deposu.dart';
 import 'package:nova_agro/features/harita/depocular/sulama_cizim_deposu.dart';
 import 'package:nova_agro/features/harita/harita_modulu.dart';
+import 'package:nova_agro/features/harita/servisler/hava_tahmini_servisi.dart';
 import 'package:nova_agro/features/harita/servisler/nova_cloud_servisi.dart';
 import 'package:nova_agro/features/harita/senkronizasyon/senkron_yoneticisi.dart';
+import 'package:nova_agro/features/harita/varliklar/hava_durumu.dart';
 import 'package:nova_agro/main.dart';
 
 void main() {
@@ -31,6 +34,7 @@ void main() {
     await hizmetBulucu.unregister<NovaCloudServisi>();
     await hizmetBulucu.unregister<SenkronYoneticisi>();
     await hizmetBulucu.unregister<Dio>();
+    await hizmetBulucu.unregister<HavaTahminiServisi>();
     hizmetBulucu.registerLazySingleton<SensorDeposu>(SensorBellekDeposu.new);
     hizmetBulucu.registerLazySingleton<SulamaCizimDeposu>(
       SulamaCizimBellekDeposu.new,
@@ -41,6 +45,9 @@ void main() {
     hizmetBulucu.registerLazySingleton<Dio>(Dio.new);
     hizmetBulucu.registerLazySingleton<NovaCloudServisi>(
       () => NovaCloudServisiFake(dio: hizmetBulucu<Dio>(), hataOlasiligi: 0),
+    );
+    hizmetBulucu.registerLazySingleton<HavaTahminiServisi>(
+      FakeHavaTahminiServisi.new,
     );
     hizmetBulucu.registerLazySingleton<SenkronYoneticisi>(
       () => SenkronYoneticisi(
@@ -56,4 +63,17 @@ void main() {
     expect(find.text('Nova Agro – Harita'), findsOneWidget);
     expect(find.text('Bul'), findsOneWidget);
   });
+}
+
+class FakeHavaTahminiServisi implements HavaTahminiServisi {
+  @override
+  Future<HavaDurumu> getirHavaDurumu({required LatLng konum}) async {
+    return HavaDurumu(
+      sicaklikC: 20,
+      hissedilenSicaklikC: null,
+      ruzgarHiziMs: 3,
+      havaDurumuMetni: 'Test havası',
+      guncellemeZamani: DateTime.now(),
+    );
+  }
 }

@@ -9,6 +9,8 @@ import 'package:latlong2/latlong.dart';
 import 'package:nova_agro/core/sabitler/harita_sabitleri.dart';
 import 'package:nova_agro/features/harita/denetleyiciler/harita_denetleyici.dart';
 import 'package:nova_agro/features/harita/denetleyiciler/harita_durumu.dart';
+import 'package:nova_agro/features/harita/denetleyiciler/hava_tahmini_denetleyici.dart';
+import 'package:nova_agro/features/harita/denetleyiciler/hava_tahmini_durumu.dart';
 import 'package:nova_agro/features/harita/denetleyiciler/konum_denetleyici.dart';
 import 'package:nova_agro/features/harita/denetleyiciler/konum_durumu.dart';
 import 'package:nova_agro/features/harita/denetleyiciler/sensor_denetleyici.dart';
@@ -18,6 +20,7 @@ import 'package:nova_agro/features/harita/denetleyiciler/sulama_cizim_durumu.dar
 import 'package:nova_agro/features/harita/denetleyiciler/tasarim_modu.dart';
 import 'package:nova_agro/features/harita/denetleyiciler/tasarim_modu_provider.dart';
 import 'package:nova_agro/features/harita/sunuma/ciftlik_tasarim_paneli.dart';
+import 'package:nova_agro/features/harita/varliklar/hava_durumu.dart';
 import 'package:nova_agro/features/harita/varliklar/sensor.dart';
 
 @RoutePage(name: 'HaritaRoute')
@@ -44,6 +47,7 @@ class _HaritaSayfasiState extends ConsumerState<HaritaSayfasi> {
   final MapController haritaDenetleyici = MapController();
   ProviderSubscription<KonumDurumu>? konumAboneligi;
   ProviderSubscription<SensorDurumu>? sensorAboneligi;
+  LatLng? sonHavaTahminiKonumu;
 
   @override
   void initState() {
@@ -126,6 +130,9 @@ class _HaritaSayfasiState extends ConsumerState<HaritaSayfasi> {
       sulamaCizimDenetleyiciProvider,
     );
     final SensorDurumu sensorDurumu = ref.watch(sensorDenetleyiciProvider);
+    final HavaTahminiDurumu havaDurumu = ref.watch(
+      havaTahminiDenetleyiciProvider,
+    );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (durum is BasariliDurumu) {
@@ -145,6 +152,32 @@ class _HaritaSayfasiState extends ConsumerState<HaritaSayfasi> {
     final bool sulamaCizimiVar = sulamaDurumu.noktalar.length >= 2;
     final List<Sensor> sensorler = sensorDurumu.sensorler;
     final bool tasarimIsaretcisiGoster = tasarimModu != TasarimModu.hicbiri;
+
+    final LatLng? havaIcinKonum = _secHavaKonumu(
+      durum: durum,
+      kullaniciKonumu: kullaniciKonumu,
+    );
+    if (havaIcinKonum != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) {
+          return;
+        }
+        final bool yenileGerekli =
+            sonHavaTahminiKonumu == null ||
+            _havaKonumuDegisti(
+              onceki: sonHavaTahminiKonumu!,
+              yeni: havaIcinKonum,
+            );
+        if (yenileGerekli) {
+          sonHavaTahminiKonumu = havaIcinKonum;
+          unawaited(
+            ref
+                .read(havaTahminiDenetleyiciProvider.notifier)
+                .yukle(konum: havaIcinKonum),
+          );
+        }
+      });
+    }
     return Scaffold(
       appBar: AppBar(title: const Text('Nova Agro – Harita')),
       body: Column(
@@ -206,6 +239,11 @@ class _HaritaSayfasiState extends ConsumerState<HaritaSayfasi> {
               ],
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0),
+            child: _HavaDurumuKart(havaDurumu: havaDurumu),
+          ),
+          const SizedBox(height: 8),
           Expanded(
             child: Stack(
               children: <Widget>[
@@ -429,5 +467,80 @@ class _HaritaSayfasiState extends ConsumerState<HaritaSayfasi> {
     } finally {
       adDenetleyici.dispose();
     }
+  }
+
+  LatLng? _secHavaKonumu({
+    required HaritaDurumu durum,
+    required LatLng? kullaniciKonumu,
+  }) {
+    if (durum is BasariliDurumu) {
+      return durum.seciliParsel.hesaplaMerkez();
+    }
+    return kullaniciKonumu;
+  }
+
+  bool _havaKonumuDegisti({required LatLng onceki, required LatLng yeni}) {
+    const Distance distance = Distance();
+    final double fark = distance(onceki, yeni);
+    return fark > 100.0;
+  }
+}
+
+class _HavaDurumuKart extends StatelessWidget {
+  final HavaTahminiDurumu havaDurumu;
+
+  const _HavaDurumuKart({required this.havaDurumu});
+
+  @override
+  Widget build(BuildContext context) {
+    if (havaDurumu is HavaTahminiIlkDurum) {
+      return const SizedBox.shrink();
+    }
+    if (havaDurumu is HavaTahminiYukleniyorDurumu) {
+      return const Card(
+        child: ListTile(
+          leading: SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(strokeWidth: 3),
+          ),
+          title: Text('Hava durumu yükleniyor...'),
+        ),
+      );
+    }
+    if (havaDurumu is HavaTahminiHataDurumu) {
+      final HavaTahminiHataDurumu hata = havaDurumu as HavaTahminiHataDurumu;
+      return Card(
+        color: Theme.of(context).colorScheme.errorContainer,
+        child: ListTile(
+          leading: Icon(
+            Icons.cloud_off,
+            color: Theme.of(context).colorScheme.onErrorContainer,
+          ),
+          title: Text(
+            hata.mesaj,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onErrorContainer,
+            ),
+          ),
+        ),
+      );
+    }
+    final HavaTahminiBasariliDurumu basarili =
+        havaDurumu as HavaTahminiBasariliDurumu;
+    final HavaDurumu veri = basarili.havaDurumu;
+    final String sicaklikMetni = '${veri.sicaklikC.toStringAsFixed(1)} °C';
+    final String ruzgarMetni = veri.ruzgarHiziMs != null
+        ? 'Rüzgar: ${(veri.ruzgarHiziMs! * 3.6).toStringAsFixed(1)} km/s'
+        : 'Rüzgar verisi yok';
+    final String zamanMetni =
+        'Güncelleme: ${veri.guncellemeZamani.hour.toString().padLeft(2, '0')}:${veri.guncellemeZamani.minute.toString().padLeft(2, '0')}';
+    return Card(
+      child: ListTile(
+        leading: const Icon(Icons.cloud, size: 32),
+        title: Text('${veri.havaDurumuMetni} · $sicaklikMetni'),
+        subtitle: Text('$ruzgarMetni · $zamanMetni'),
+      ),
+    );
   }
 }

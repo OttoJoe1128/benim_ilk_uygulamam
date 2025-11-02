@@ -11,6 +11,7 @@ import 'package:nova_agro/features/harita/depocular/sulama_cizim_deposu.dart';
 import 'package:nova_agro/features/harita/depocular/sulama_cizim_sqlite_deposu.dart';
 import 'package:nova_agro/features/harita/denetleyiciler/konum_denetleyici.dart';
 import 'package:nova_agro/features/harita/hizmetler/konum_hizmeti.dart';
+import 'package:nova_agro/features/harita/servisler/hava_tahmini_servisi.dart';
 import 'package:nova_agro/features/harita/servisler/nova_cloud_servisi.dart';
 import 'package:nova_agro/features/harita/senkronizasyon/senkron_yoneticisi.dart';
 import 'package:nova_agro/features/harita/veri_kaynaklari/geojson_parsel_kaynagi.dart';
@@ -57,5 +58,8 @@ void kurHaritaModulu() {
       novaCloudServisi: hizmetBulucu<NovaCloudServisi>(),
       senkronIslemDeposu: hizmetBulucu<SenkronIslemDeposu>(),
     ),
+  );
+  hizmetBulucu.registerLazySingleton<HavaTahminiServisi>(
+    () => OpenMeteoHavaTahminiServisi(dio: hizmetBulucu<Dio>()),
   );
 }
