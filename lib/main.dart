@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
+
+import 'package:benim_ilk_uygulamam/core/di/hizmet_bulucu.dart';
+import 'package:benim_ilk_uygulamam/features/harita/senkronizasyon/mqtt/mqtt_senkron_servisi.dart';
 import 'package:benim_ilk_uygulamam/features/harita/sunuma/harita_sayfasi.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  debugPrint('Nova Agro v2 • Otonom Çiftlik Zekâsı');
+  await hazirlaHizmetBulucu();
+  await kurHizmetBulucu<MqttSenkronServisi>().baslat();
   runApp(const MyApp());
 }
 
